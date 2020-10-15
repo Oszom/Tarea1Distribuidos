@@ -4,10 +4,25 @@ import (
 	"log"
 	"net"
 	"google.golang.org/grpc"
-	"omega/mediocres/pureba/chat"
+	"omega/mediocres/pureba/chat"  
 )
 
+func GetOutboundIP() net.IP {
+    conn, err := net.Dial("udp", "8.8.8.8:80")
+    if err != nil {
+        log.Fatal(err)
+    }
+    defer conn.Close()
+
+    localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+    return localAddr.IP
+}
+
 func main() {
+
+	log.Printf("El IP del servidor es: %v",GetOutboundIP())
+
 	lis, err := net.Listen("tcp", ":9000") 
 	if err != nil{
 		log.Fatalf("Failed to listen on port 9000: %v", err)

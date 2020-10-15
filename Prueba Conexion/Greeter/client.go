@@ -2,15 +2,24 @@ package main
 
 import (
 	"log"
+	"bufio"
+	"os"
+	"strings"
+	"fmt"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-
 	"omega/mediocres/pureba/chat"
 )
 
 func main() {
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(":9000", grpc.WithInsecure())
+	reader := bufio.NewReader(os.Stdin)
+
+	fmt.Printf("Ingresa la IP del cliente:")
+
+	ip, _ := reader.ReadString('\n')
+	ip = strings.TrimSuffix(ip, "\n")
+	conn, err := grpc.Dial(ip+":9000", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("no se pudo conectar: %s", err)
 	}
@@ -19,14 +28,27 @@ func main() {
 
 	c := chat.NewChatServiceClient(conn)
 
-	message := chat.Message{
-		Body: "Quiero casarme con una chica anime polilla!",
-	}
+	fmt.Printf("Jorge:")
+	mensaje, _ := reader.ReadString('\n')
 
-	response, err := c.SayHello(context.Background(), &message)
-	if err != nil {
-		log.Fatalf("La polilla gigante ataco la conexion: %s", err)
-	}
+	for {
 
-	log.Printf("El servidor responde: %s", response.Body)
+		message := chat.Message{
+			Body: mensaje,
+		}
+
+		response, err := c.SayHello(context.Background(), &message)
+		if err != nil {
+			log.Fatalf("La polilla gigante ataco la conexion: %s", err)
+		}
+
+		fmt.Printf("Pablo: %s", response.Body)
+
+		fmt.Printf("Jorge:")
+
+		mensaje, _ = reader.ReadString('\n')
+
+
+
+	}
 }
