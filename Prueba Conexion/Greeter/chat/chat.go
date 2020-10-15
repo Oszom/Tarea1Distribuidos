@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"log"
 	"bufio"
 	"os"
 	"fmt"
