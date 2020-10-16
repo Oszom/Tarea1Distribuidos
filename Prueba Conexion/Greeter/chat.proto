@@ -5,6 +5,12 @@ message Message {
 	string body = 1;
 }
 
+message Cosita {
+	string saludo = 1;
+	int64 posicion = 2;
+}
+
 service ChatService {
 	rpc SayHello(Message) returns (Message) {}
+	rpc Saludar(Cosita) returns (Cosita){}
 }

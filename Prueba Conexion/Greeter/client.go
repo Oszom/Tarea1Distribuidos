@@ -1,14 +1,14 @@
 package main
 
 import (
-	"log"
 	"bufio"
-	"os"
-	"strings"
 	"fmt"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"log"
 	"omega/mediocres/pureba/chat"
+	"os"
+	"strings"
 )
 
 func main() {
@@ -19,6 +19,7 @@ func main() {
 
 	ip, _ := reader.ReadString('\n')
 	ip = strings.TrimSuffix(ip, "\n")
+	ip = strings.TrimSuffix(ip, "\r")
 	conn, err := grpc.Dial(ip+":9000", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("no se pudo conectar: %s", err)
@@ -30,25 +31,25 @@ func main() {
 
 	fmt.Printf("Jorge:")
 	mensaje, _ := reader.ReadString('\n')
-
+	var posicion int64 = 1
 	for {
 
-		message := chat.Message{
-			Body: mensaje,
+		message := chat.Cosita{
+			Saludo:   mensaje,
+			Posicion: posicion,
 		}
 
-		response, err := c.SayHello(context.Background(), &message)
+		response, err := c.Saludar(context.Background(), &message)
 		if err != nil {
 			log.Fatalf("La polilla gigante ataco la conexion: %s", err)
 		}
 
-		fmt.Printf("Pablo: %s", response.Body)
-
+		fmt.Printf("Pablo: %s", response.Saludo)
+		fmt.Printf("Pablo: %d", response.Posicion)
 		fmt.Printf("Jorge:")
 
 		mensaje, _ = reader.ReadString('\n')
-
-
+		posicion++
 
 	}
 }
