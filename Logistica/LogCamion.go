@@ -1,4 +1,4 @@
-package chat
+package LogisticaCamion
 
 import (
 	"bufio"
@@ -7,10 +7,20 @@ import (
 	"os"
 )
 
+type Registro struct {
+	idPaquete int64;
+	seguimiento int64;
+	tipo string;
+    valor int64;
+    intentos int64;
+    estado string;
+}
+}
+
 //Server is
 type Server struct {
-	posicion int64
-	elSaludo string
+	listaPedidos []*Registro;
+	
 }
 
 //SayHello is
