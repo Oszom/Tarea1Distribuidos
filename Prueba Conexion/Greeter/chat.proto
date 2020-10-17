@@ -5,6 +5,11 @@ message Message {
 	string body = 1;
 }
 
+message Cosita{
+	string saludo = 1;
+	
+}
+
 service ChatService {
 	rpc SayHello(Message) returns (Message) {}
 }
