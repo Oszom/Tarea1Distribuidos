@@ -101,3 +101,12 @@ func (s *ServerLogistica) InformarSeguimientoCamion(ctx context.Context, codSegu
 	}, nil
 
 }
+
+func (s *ServerLogistica) InformarEntrega(ctx context.Context, codSeguimiento *InformeCamion) (*InformeCamion, error) {
+
+	return &InformeCamion{
+		IdPaquete: 0,
+		Estado:    "Muy lindo",
+	}, nil
+
+}
