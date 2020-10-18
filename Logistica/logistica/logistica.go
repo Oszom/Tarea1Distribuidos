@@ -72,3 +72,23 @@ func (s *ServerCliente) NuevaOrden(ctx context.Context, orden *OrdenCliente) (*S
 		Producto:    nuevaOrden.nombre,
 	}, nil
 }
+
+//NuevaOrden is
+func (s *ServerCliente) InformarSeguimiento(ctx context.Context, codSeguimiento *SeguimientoCliente) (*SeguimientoCliente, error) {
+	resultado := &SeguimientoCliente{
+		Seguimiento: -1,
+		Estado:      "No existe",
+		Producto:    "-----",
+	}
+	for i := 0; i < len(s.ListaEnvios); i++ {
+		if s.ListaEnvios[i].seguimiento == codSeguimiento.Seguimiento {
+			resultado = &SeguimientoCliente{
+				Seguimiento: s.ListaEnvios[i].seguimiento,
+				Estado:      s.ListaEnvios[i].estado,
+				Producto:    s.ListaEnvios[i].nombre,
+			}
+		}
+	}
+
+	return resultado, nil
+}

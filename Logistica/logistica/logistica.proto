@@ -34,7 +34,6 @@ message OrdenCliente{
     string destino = 5;
     int64 prioritario = 6;
     //-1 -> Retail __ 0 -> Normal  __ 1 -> Prioritario
-    int64 seguimiento = 7;
 }
 
 message SeguimientoCliente{
@@ -45,7 +44,7 @@ message SeguimientoCliente{
 
 service ClienteService {
     rpc nuevaOrden(OrdenCliente) returns (SeguimientoCliente) {}
-    //rpc informarSeguimiento(OrdenCliente) returns (SeguimientoCliente) {}
+    rpc informarSeguimiento(SeguimientoCliente) returns (SeguimientoCliente) {}
 }
 
 //*****************Comunicacion-Logistica-Finanzas*****************

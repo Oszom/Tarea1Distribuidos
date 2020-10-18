@@ -20,20 +20,28 @@ func main() {
 
 	c := logistica.NewClienteServiceClient(conn)
 
-	message := logistica.OrdenCliente{
+	message1 := logistica.OrdenCliente{
 		Id:          "ASS-1313",
 		Producto:    "Un masajeador wink wink",
 		Valor:       1313,
 		Tienda:      "Solo Para Chicos Grandes",
 		Destino:     "Tus Nalgas",
 		Prioritario: -1,
-		Seguimiento: 0,
 	}
 
-	response, err := c.NuevaOrden(context.Background(), &message)
+	message2 := logistica.SeguimientoCliente{
+		Seguimiento: 1,
+		Estado:      "Un masajeador wink wink",
+		Producto:    "1313",
+	}
+
+	response1, err := c.NuevaOrden(context.Background(), &message1)
+	response2, err := c.InformarSeguimiento(context.Background(), &message2)
+
 	if err != nil {
 		log.Fatalf("La polilla gigante ataco la conexion: %s", err)
 	}
 
-	log.Printf("El numero de seguimiento de la wea de producto %s es: %d", response.Producto, response.Seguimiento)
+	log.Printf("El numero de seguimiento de la wea de producto %s es: %d", response1.Producto, response1.Seguimiento)
+	log.Printf("El pedido ql que querí saber esta %s", response2.Estado)
 }
