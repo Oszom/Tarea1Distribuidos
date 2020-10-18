@@ -8,11 +8,12 @@ import (
 	wr "github.com/mroth/weightedrand"
 )
 
-// Camion is
-type Camion struct {
-	tipo      string
-	capacidad int
-	informe   []*Registro
+// CamionServer is
+type CamionServer struct {
+	tipo           string
+	capacidad      int
+	informe        []*Registro
+	enviosActuales []*Registro
 }
 
 //Registro is
@@ -66,7 +67,7 @@ func main() {
 }
 
 //registrarEntregaDePaquete
-func registrarEntregaDePaquete(idpaquete int, camion *Camion) {
+func registrarEntregaDePaquete(idpaquete int, camion *CamionServer) {
 	registro := camion.informe
 	for i := 0; i < len(registro); i++ {
 		if registro[i].idpaquete == idpaquete {
@@ -76,7 +77,7 @@ func registrarEntregaDePaquete(idpaquete int, camion *Camion) {
 }
 
 //sumarIntentoEntrega is
-func sumarIntentoEntrega(idpaquete int, camion *Camion) {
+func sumarIntentoEntrega(idpaquete int, camion *CamionServer) {
 	registro := camion.informe
 	for i := 0; i < len(registro); i++ {
 		if registro[i].idpaquete == idpaquete {
@@ -98,8 +99,8 @@ func newRegistro(idpaquete int, tipo string, valor int, origen string, destino s
 }
 
 //newCamion is
-func newCamion(tipo string) *Camion {
-	camion := Camion{tipo: tipo}
+func newCamion(tipo string) *CamionServer {
+	camion := CamionServer{tipo: tipo}
 	camion.capacidad = 2
 	return &camion
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Tarea1/Logistica/logistica"
+	"Tarea1/Camiones/camion"
 	"log"
 	"net"
 
@@ -30,11 +30,11 @@ func main() {
 		log.Fatalf("Failed to listen on port 9000: %v", err)
 	}
 
-	s := camion.ServerCliente{}
+	s := camion.CamionServer{}
 
 	grpcServer := grpc.NewServer()
 
-	logistica.RegisterLogisticaServiceServer(grpcServer, &s)
+	camion.RegisterCamionServiceServer(grpcServer, &s)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over port 9000: %v", err)

@@ -22,7 +22,7 @@ type RegistroLogistica struct {
 }
 
 //ServerCliente is
-type ServerCliente struct {
+type ServerLogistica struct {
 	ListaEnvios      []*RegistroLogistica
 	ColaRetail       []*RegistroLogistica
 	ColaPrioritarios []*RegistroLogistica
@@ -57,7 +57,7 @@ func tipoEnvio(prioridad int64) string {
 }
 
 //NuevaOrden is
-func (s *ServerCliente) NuevaOrden(ctx context.Context, orden *OrdenCliente) (*SeguimientoCliente, error) {
+func (s *ServerLogistica) NuevaOrden(ctx context.Context, orden *OrdenCliente) (*SeguimientoCliente, error) {
 
 	tipoEnvio := tipoEnvio(orden.Prioritario)
 	nuevaOrden := newRegistro(orden.Id, tipoEnvio, orden.Producto, orden.Valor, orden.Tienda, orden.Destino, s.currSeguimiento)
@@ -74,7 +74,7 @@ func (s *ServerCliente) NuevaOrden(ctx context.Context, orden *OrdenCliente) (*S
 }
 
 //InformarSeguimiento is
-func (s *ServerCliente) InformarSeguimiento(ctx context.Context, codSeguimiento *SeguimientoCliente) (*SeguimientoCliente, error) {
+func (s *ServerLogistica) InformarSeguimiento(ctx context.Context, codSeguimiento *SeguimientoCliente) (*SeguimientoCliente, error) {
 	resultado := &SeguimientoCliente{
 		Seguimiento: -1,
 		Estado:      "No existe",
@@ -93,7 +93,7 @@ func (s *ServerCliente) InformarSeguimiento(ctx context.Context, codSeguimiento 
 	return resultado, nil
 }
 
-func (s *ServerCliente) InformarEntrega(ctx context.Context, codSeguimiento *InformeCamion) (*InformeCamion, error) {
+func (s *ServerLogistica) InformarEntrega(ctx context.Context, codSeguimiento *InformeCamion) (*InformeCamion, error) {
 
 	return &InformeCamion{
 		IdPaquete: 0,
