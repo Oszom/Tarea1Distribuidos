@@ -1,10 +1,11 @@
-package main
+package camion
 
 import (
 	"fmt"
-	wr "github.com/mroth/weightedrand"
 	"math/rand"
 	"time"
+
+	wr "github.com/mroth/weightedrand"
 )
 
 // Camion is

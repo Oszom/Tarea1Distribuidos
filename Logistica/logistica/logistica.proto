@@ -1,29 +1,6 @@
 syntax = "proto3";
 package logistica;
 
-
-//*****************Comunicacion-Logistica-Camion*****************
-
-message paqueteRegistro {
-	string idPaquete = 1;
-    int64 seguimiento = 2;
-    string tipo = 3;
-    int64 valor = 4;
-    int64 intentos = 5;
-    string estado = 6;
-}
-
-message informeCamion {
-    int64 idPaquete = 1;
-    string estado = 2;
-}
-
-service CamionService {
-	rpc nuevoPaquete(paqueteRegistro) returns (paqueteRegistro) {}
-    rpc informarEstadoSeguimiento(informeCamion) returns (informeCamion){}
-    rpc informarEntrega(informeCamion) returns (informeCamion){}
-}
-
 //*****************Comunicacion-Logistica-Cliente*****************
 
 message OrdenCliente{
@@ -42,9 +19,20 @@ message SeguimientoCliente{
     string producto = 3;
 }
 
-service ClienteService {
+message informeCamion {
+    int64 idPaquete = 1;
+    string estado = 2;
+}
+
+service LogisticaService {
+    //······················Funciones para el Cliente······················
     rpc nuevaOrden(OrdenCliente) returns (SeguimientoCliente) {}
     rpc informarSeguimiento(SeguimientoCliente) returns (SeguimientoCliente) {}
+    //······································································
+    //······················Funciones para el Camion························
+    rpc informarSeguimientoCamion(informeCamion) returns (informeCamion){} //Informacion sobre el estado de seguimiento actual en el camion
+    rpc informarEntrega(informeCamion) returns (informeCamion){} //Aviso de entrega completada
+    //······································································
 }
 
 //*****************Comunicacion-Logistica-Finanzas*****************

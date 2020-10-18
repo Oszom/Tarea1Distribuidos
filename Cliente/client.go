@@ -2,7 +2,10 @@ package main
 
 import (
 	logistica "Tarea1/Logistica/logistica"
+	"bufio"
 	"log"
+	"os"
+	"strings"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -10,15 +13,20 @@ import (
 
 func main() {
 
+	reader := bufio.NewReader(os.Stdin)
+	ip, _ := reader.ReadString('\n')
+	ip = strings.TrimSuffix(ip, "\n")
+	ip = strings.TrimSuffix(ip, "\r")
+
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(":9000", grpc.WithInsecure())
+	conn, err := grpc.Dial(ip+":9000", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("no se pudo conectar: %s", err)
 	}
 
 	defer conn.Close()
 
-	c := logistica.NewClienteServiceClient(conn)
+	c := logistica.NewLogisticaServiceClient(conn)
 
 	message1 := logistica.OrdenCliente{
 		Id:          "ASS-1313",

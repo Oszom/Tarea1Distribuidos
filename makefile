@@ -1,12 +1,28 @@
+#················································Logistica·························································
 .PHONY: runLogistica
-runLogistica: go run Logistica/server.go
+runLogistica: 
+	protoc -I Logistica/logistica/ Logistica/logistica/logistica.proto --go_out=plugins=grpc:Logistica/logistica/
+	go run Logistica/server.go
 
 .PHONY: compileLogistica
 compileLogistica:
 	protoc -I Logistica/logistica/ Logistica/logistica/logistica.proto --go_out=plugins=grpc:Logistica/logistica/
 
+#··················································································································
+#················································Cliente···························································
 .PHONY: runCliente
 runCliente: go run Cliente/client.go
+#··················································································································
+#················································Camion····························································
+.PHONY: runCamion
+runLogistica: 
+	protoc -I Camiones/camion/ Camiones/camion/camion.proto --go_out=plugins=grpc:Camiones/camion/
+	go run Camiones/server.go
+
+.PHONY: compileCamion
+compileLogistica:
+	protoc -I Camiones/camion/ Camiones/camion/camion.proto --go_out=plugins=grpc:Camiones/camion/
+#··················································································································
 
 .PHONY: server
 server: ## Build and run server.

@@ -30,7 +30,7 @@ func main() {
 		log.Fatalf("Failed to listen on port 9000: %v", err)
 	}
 
-	s := logistica.ServerCliente{}
+	s := camion.ServerCliente{}
 
 	grpcServer := grpc.NewServer()
 

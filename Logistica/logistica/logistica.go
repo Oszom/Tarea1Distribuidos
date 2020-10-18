@@ -73,7 +73,7 @@ func (s *ServerCliente) NuevaOrden(ctx context.Context, orden *OrdenCliente) (*S
 	}, nil
 }
 
-//NuevaOrden is
+//InformarSeguimiento is
 func (s *ServerCliente) InformarSeguimiento(ctx context.Context, codSeguimiento *SeguimientoCliente) (*SeguimientoCliente, error) {
 	resultado := &SeguimientoCliente{
 		Seguimiento: -1,
@@ -91,4 +91,13 @@ func (s *ServerCliente) InformarSeguimiento(ctx context.Context, codSeguimiento 
 	}
 
 	return resultado, nil
+}
+
+func (s *ServerCliente) InformarEntrega(ctx context.Context, codSeguimiento *InformeCamion) (*InformeCamion, error) {
+
+	return &InformeCamion{
+		IdPaquete: 0,
+		Estado:    "Muy lindo",
+	}, nil
+
 }
