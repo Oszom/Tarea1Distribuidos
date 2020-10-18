@@ -3,8 +3,9 @@ package chat
 import (
 	"bufio"
 	"fmt"
-	"golang.org/x/net/context"
 	"os"
+
+	"golang.org/x/net/context"
 )
 
 //Server is
@@ -24,9 +25,9 @@ func (s *Server) SayHello(ctx context.Context, message *Message) (*Message, erro
 
 //Saludar is
 func (s *Server) Saludar(ctx context.Context, cosita *Cosita) (*Cosita, error) {
-	fmt.Printf("El saludo anterior fue: %s\n", s.elSaludo)
-	fmt.Printf("La posicion anterior fue: %d\n", s.posicion)
+	fmt.Printf("El saludo anterior fue: %s\n", cosita.Saludo)
+	fmt.Printf("La posicion anterior fue: %d\n", cosita.Posicion)
 	s.posicion = cosita.Posicion
 	s.elSaludo = cosita.Saludo
-	return &Cosita{Saludo: "jorge", Posicion: 1}, nil
+	return &Cosita{Saludo: cosita.Saludo, Posicion: cosita.Posicion}, nil
 }

@@ -1,0 +1,52 @@
+syntax = "proto3";
+package logistica;
+
+
+//*****************Comunicacion-Logistica-Camion*****************
+
+message paqueteRegistro {
+	string idPaquete = 1;
+    int64 seguimiento = 2;
+    string tipo = 3;
+    int64 valor = 4;
+    int64 intentos = 5;
+    string estado = 6;
+}
+
+message informeCamion {
+    int64 idPaquete = 1;
+    string estado = 2;
+}
+
+service CamionService {
+	rpc nuevoPaquete(paqueteRegistro) returns (paqueteRegistro) {}
+    rpc informarEstadoSeguimiento(informeCamion) returns (informeCamion){}
+    rpc informarEntrega(informeCamion) returns (informeCamion){}
+}
+
+//*****************Comunicacion-Logistica-Cliente*****************
+
+message OrdenCliente{
+    string id = 1;
+    string producto = 2;
+    int64 valor = 3;
+    string tienda = 4;
+    string destino = 5;
+    int64 prioritario = 6;
+    //-1 -> Retail __ 0 -> Normal  __ 1 -> Prioritario
+    int64 seguimiento = 7;
+}
+
+message SeguimientoCliente{
+    int64 seguimiento = 1;
+    string estado = 2;
+    string producto = 3;
+}
+
+service ClienteService {
+    rpc nuevaOrden(OrdenCliente) returns (SeguimientoCliente) {}
+    //rpc informarSeguimiento(OrdenCliente) returns (SeguimientoCliente) {}
+}
+
+//*****************Comunicacion-Logistica-Finanzas*****************
+

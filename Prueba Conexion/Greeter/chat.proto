@@ -10,7 +10,17 @@ message Cosita {
 	int64 posicion = 2;
 }
 
+message Energetica {
+	string RamoASalvar = 1;
+	int64 nEnergeticas = 2;
+	string sabor = 3;
+}
+
 service ChatService {
 	rpc SayHello(Message) returns (Message) {}
 	rpc Saludar(Cosita) returns (Cosita){}
+}
+
+service ChatService2Revenge {
+	rpc SalvarSemestre(Energetica) returns (Energetica) {}
 }

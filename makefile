@@ -1,7 +1,13 @@
-.PHONY: compile
-compile: ## Compile the proto file.
-	protoc -I pkg/proto/credit/ pkg/proto/credit/credit.proto --go_out=plugins=grpc:pkg/proto/credit/
- 
+.PHONY: runLogistica
+runLogistica: go run Logistica/server.go
+
+.PHONY: compileLogistica
+compileLogistica:
+	protoc -I Logistica/logistica/ Logistica/logistica/logistica.proto --go_out=plugins=grpc:Logistica/logistica/
+
+.PHONY: runCliente
+runCliente: go run Cliente/client.go
+
 .PHONY: server
 server: ## Build and run server.
 	go run -race -ldflags "-s -w" -o bin/server server/main.go
@@ -11,5 +17,6 @@ server: ## Build and run server.
 client: ## Build and run client.
 	go run -race -ldflags "-s -w" -o Cliente/client.go
 
-.PHONY: CodigoPrueba
-compilePrueba: protoc -I Prueba\ Conexion/Greeter Prueba\ Conexion/Greeter/chat.proto --go_out=plugins=grpc:Prueba\ Conexion/Greeter/chat
+.PHONY: compilePrueba
+compilePrueba: 
+	protoc -I "Prueba Conexion/Greeter" "Prueba Conexion/Greeter/chat.proto" --go_out=plugins=grpc:"Prueba Conexion/Greeter/chat"

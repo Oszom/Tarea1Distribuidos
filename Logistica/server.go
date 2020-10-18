@@ -1,13 +1,14 @@
 package main
 
 import (
+	"Tarea1/Logistica/logistica"
 	"log"
 	"net"
-	"omega/mediocres/pureba/chat"
 
 	"google.golang.org/grpc"
 )
 
+//GetOutboundIP is
 func GetOutboundIP() net.IP {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
@@ -29,11 +30,11 @@ func main() {
 		log.Fatalf("Failed to listen on port 9000: %v", err)
 	}
 
-	s := chat.Server{}
+	s := logistica.ServerCliente{}
 
 	grpcServer := grpc.NewServer()
 
-	chat.RegisterChatServiceServer(grpcServer, &s)
+	logistica.RegisterClienteServiceServer(grpcServer, &s)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to serve gRPC server over port 9000: %v", err)

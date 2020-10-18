@@ -1,14 +1,15 @@
 package main
 
 import (
+	logistica "Tarea1/Logistica/logistica"
 	"log"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-
-	"omega/mediocres/pureba/chat"
 )
 
 func main() {
+
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(":9000", grpc.WithInsecure())
 	if err != nil {
@@ -17,16 +18,22 @@ func main() {
 
 	defer conn.Close()
 
-	c := chat.NewChatServiceClient(conn)
+	c := logistica.NewClienteServiceClient(conn)
 
-	message := chat.Message{
-		Body: "Quiero casarme con una chica anime polilla!",
+	message := logistica.OrdenCliente{
+		Id:          "ASS-1313",
+		Producto:    "Un masajeador wink wink",
+		Valor:       1313,
+		Tienda:      "Solo Para Chicos Grandes",
+		Destino:     "Tus Nalgas",
+		Prioritario: -1,
+		Seguimiento: 0,
 	}
 
-	response, err := c.SayHello(context.Background(), &message)
+	response, err := c.NuevaOrden(context.Background(), &message)
 	if err != nil {
 		log.Fatalf("La polilla gigante ataco la conexion: %s", err)
 	}
 
-	log.Printf("El servidor responde: %s", response.Body)
+	log.Printf("El numero de seguimiento de la wea de producto %s es: %d", response.Producto, response.Seguimiento)
 }
