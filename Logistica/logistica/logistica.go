@@ -93,7 +93,7 @@ func (s *ServerLogistica) InformarSeguimiento(ctx context.Context, codSeguimient
 	return resultado, nil
 }
 
-func (s *ServerLogistica) InformarEntrega(ctx context.Context, codSeguimiento *InformeCamion) (*InformeCamion, error) {
+func (s *ServerLogistica) InformarSeguimientoCamion(ctx context.Context, codSeguimiento *InformeCamion) (*InformeCamion, error) {
 
 	return &InformeCamion{
 		IdPaquete: 0,
