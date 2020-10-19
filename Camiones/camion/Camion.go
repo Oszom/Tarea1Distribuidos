@@ -65,6 +65,7 @@ type CamionServer struct {
 	tipoUltimoEnvio string
 }
 
+//Registro is
 type Registro struct {
 	idpaquete    string
 	tipo         string
@@ -84,9 +85,9 @@ func main() {
 	ip = strings.TrimSuffix(ip, "\r")
 
 	fmt.Printf("Ingrese tiempo de espera machucao: ")
-	tiempoEspera, _ := reader.ReadString('\n')
-	tiempoEspera = strings.TrimSuffix(ip, "\n")
-	tiempoEspera = strings.TrimSuffix(ip, "\r")
+	//tiempoEspera, _ := reader.ReadString('\n')
+	//tiempoEspera = strings.TrimSuffix(ip, "\n")
+	//tiempoEspera = strings.TrimSuffix(ip, "\r")
 
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(ip+":9000", grpc.WithInsecure())
@@ -145,25 +146,68 @@ func RecorridoCamiones(tipoCamion string, ip string, tiempo int32) {
 		c := logistica.NewLogisticaServiceClient(conn)
 		response1, err1 := c.AsignarPaquete(context.Background(), &message1)
 
+		if err1 != nil {
+			fmt.Printf("no se pudo asignar paquete al camión: %s\n", err1)
+		}
+
 		time.Sleep(time.Duration(tiempo) * time.Millisecond)
 
-		var registroNuevo = newRegistro(response1.IdPaquete, response1.Tipo, response1.Valor, response1.Origen, response1.Destino, 0, "0")
+		response2, err2 := c.AsignarPaquete(context.Background(), &message1)
+
+		if err2 != nil {
+			fmt.Printf("no se pudo asignar paquete al camión: %s\n", err2)
+		}
+		if response2.IdPaquete != "" {
+			var registroNuevo1 = newRegistro(response2.IdPaquete, response2.Tipo, response2.Valor, response2.Origen, response2.Destino, 0, "0")
+			camion.informe = append(camion.informe, registroNuevo1)
+			camion.enviosActuales = append(camion.enviosActuales, registroNuevo1)
+
+		}
+
+		var registroNuevo2 = newRegistro(response1.IdPaquete, response1.Tipo, response1.Valor, response1.Origen, response1.Destino, 0, "0")
+		camion.informe = append(camion.informe, registroNuevo2)
+		camion.enviosActuales = append(camion.enviosActuales, registroNuevo2)
+		var paqueteAEntregar *Registro
+		var posicion int
 		for i := 0; i < 3; i++ {
-			intentoEntrega := EntregarPaquete()
-			if len(camion.enviosActuales) == 2 {
-				if camion.enviosActuales[0].valor >= camion.enviosActuales[1].valor {
-					paqueteAEntregar := camion.enviosActuales[0]
+			for j := 0; j < 2; j++ {
+				if len(camion.enviosActuales) == 2 {
+					if camion.enviosActuales[0].valor >= camion.enviosActuales[1].valor && camion.enviosActuales[j].fechaEntrega == "0" {
+						paqueteAEntregar = camion.enviosActuales[0]
+						posicion = 0
+					} else {
+						paqueteAEntregar = camion.enviosActuales[1]
+						posicion = 1
+					}
+
 				} else {
-					paqueteAEntregar := camion.enviosActuales[1]
+					if camion.enviosActuales[0].fechaEntrega == "0" {
+						paqueteAEntregar = camion.enviosActuales[0]
+						posicion = 0
+					}
+
+				}
+
+				//Intentar entrega
+				var intentoEntrega = EntregarPaquete()
+				if intentoEntrega == "entregado" {
+					registrarEntregaDePaquete(paqueteAEntregar.idpaquete, camion)
+					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
+					camion.enviosActuales = remove(camion.enviosActuales, posicion)
+
+				} else {
+					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
+
 				}
 			}
-
-			if intentoEntrega == entregado {
-				registrarEntregaDePaquete()
-			}
 		}
+
 	}
 
+}
+
+func remove(slice []*Registro, s int) []*Registro {
+	return append(slice[:s], slice[s+1:]...)
 }
 
 //NuevoPaquete is
