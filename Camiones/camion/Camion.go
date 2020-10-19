@@ -1,10 +1,16 @@
 package camion
 
 import (
-	"math/rand"
-	"time"
-
+	logistica "Tarea1/Logistica/logistica"
+	"bufio"
+	context "context"
+	"fmt"
 	wr "github.com/mroth/weightedrand"
+	"google.golang.org/grpc"
+	"math/rand"
+	"os"
+	"strings"
+	"time"
 )
 
 //Registro is
@@ -51,13 +57,15 @@ func main() {
 */
 
 // CamionServer is
-type Camion struct {
-	tipo           string
-	capacidad      int
-	informe        []*Registro
-	enviosActuales []*Registro
+type CamionServer struct {
+	tipo            string
+	capacidad       int
+	informe         []*Registro
+	enviosActuales  []*Registro
+	tipoUltimoEnvio string
 }
 
+//Registro is
 type Registro struct {
 	idpaquete    string
 	tipo         string
@@ -69,8 +77,164 @@ type Registro struct {
 	fechaEntrega string
 }
 
+func main() {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("Ingrese nombre de la maquina: ")
+	ip, _ := reader.ReadString('\n')
+	ip = strings.TrimSuffix(ip, "\n")
+	ip = strings.TrimSuffix(ip, "\r")
+
+	fmt.Printf("Ingrese tiempo de espera machucao: ")
+	//tiempoEspera, _ := reader.ReadString('\n')
+	//tiempoEspera = strings.TrimSuffix(ip, "\n")
+	//tiempoEspera = strings.TrimSuffix(ip, "\r")
+
+	var conn *grpc.ClientConn
+	conn, err := grpc.Dial(ip+":9000", grpc.WithInsecure())
+	if err != nil {
+		fmt.Printf("no se pudo conectar: %s\n", err)
+	}
+
+	defer conn.Close()
+
+	c := logistica.NewLogisticaServiceClient(conn)
+
+	message1 := logistica.OrdenCliente{
+		Id:          "ASS-1313",
+		Producto:    "Un masajeador wink wink",
+		Valor:       1313,
+		Tienda:      "Solo Para Chicos Grandes",
+		Destino:     "Tus Nalgas",
+		Prioritario: -1,
+	}
+
+	message2 := logistica.SeguimientoCliente{
+		Seguimiento: 1,
+		Estado:      "Un masajeador wink wink",
+		Producto:    "1313",
+	}
+
+	response1, err := c.NuevaOrden(context.Background(), &message1)
+	response2, err := c.InformarSeguimiento(context.Background(), &message2)
+
+	if err != nil {
+		fmt.Printf("La polilla gigante ataco la conexion: %s\n", err)
+	}
+
+	fmt.Printf("El numero de seguimiento de la wea de producto %s es: %d\n", response1.Producto, response1.Seguimiento)
+	fmt.Printf("El pedido ql que querí saber esta %s\n", response2.Estado)
+}
+
+//RecorridoCamiones is
+func RecorridoCamiones(tipoCamion string, ip string, tiempo int32) {
+	camion := newCamion(tipoCamion)
+
+	var conn *grpc.ClientConn
+	conn, err := grpc.Dial(ip+":9000", grpc.WithInsecure())
+	if err != nil {
+		fmt.Printf("no se pudo conectar: %s\n", err)
+	}
+
+	defer conn.Close()
+	for {
+
+		message1 := logistica.AsignacionCamion{
+			Tipo:               camion.tipo,
+			LastPaqueteEnviado: camion.tipoUltimoEnvio,
+		}
+
+		c := logistica.NewLogisticaServiceClient(conn)
+		response1, err1 := c.AsignarPaquete(context.Background(), &message1)
+
+		if err1 != nil {
+			fmt.Printf("no se pudo asignar paquete al camión: %s\n", err1)
+		}
+
+		time.Sleep(time.Duration(tiempo) * time.Millisecond)
+
+		response2, err2 := c.AsignarPaquete(context.Background(), &message1)
+
+		if err2 != nil {
+			fmt.Printf("no se pudo asignar paquete al camión: %s\n", err2)
+		}
+		if response2.IdPaquete != "" {
+			var registroNuevo1 = newRegistro(response2.IdPaquete, response2.Tipo, response2.Valor, response2.Origen, response2.Destino, 0, "0")
+			camion.informe = append(camion.informe, registroNuevo1)
+			camion.enviosActuales = append(camion.enviosActuales, registroNuevo1)
+
+		}
+
+		var registroNuevo2 = newRegistro(response1.IdPaquete, response1.Tipo, response1.Valor, response1.Origen, response1.Destino, 0, "0")
+		camion.informe = append(camion.informe, registroNuevo2)
+		camion.enviosActuales = append(camion.enviosActuales, registroNuevo2)
+		var paqueteAEntregar *Registro
+		var posicion int
+		for i := 0; i < 3; i++ {
+			for j := 0; j < 2; j++ {
+				if len(camion.enviosActuales) == 2 {
+					if camion.enviosActuales[0].valor >= camion.enviosActuales[1].valor && camion.enviosActuales[j].fechaEntrega == "0" {
+						paqueteAEntregar = camion.enviosActuales[0]
+						posicion = 0
+					} else {
+						paqueteAEntregar = camion.enviosActuales[1]
+						posicion = 1
+					}
+
+				} else {
+					if camion.enviosActuales[0].fechaEntrega == "0" {
+						paqueteAEntregar = camion.enviosActuales[0]
+						posicion = 0
+					}
+
+				}
+
+				//Intentar entrega
+				var intentoEntrega = EntregarPaquete()
+				if intentoEntrega == "entregado" {
+					registrarEntregaDePaquete(paqueteAEntregar.idpaquete, camion)
+					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
+					camion.enviosActuales = remove(camion.enviosActuales, posicion)
+
+				} else {
+					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
+
+				}
+			}
+		}
+
+	}
+
+}
+
+func remove(slice []*Registro, s int) []*Registro {
+	return append(slice[:s], slice[s+1:]...)
+}
+
+//NuevoPaquete is
+func (cam *CamionServer) NuevoPaquete(ctx context.Context, paquete *PaqueteRegistro) (*InformeCamion, error) {
+
+	nuevoPaquete := Registro{
+		idpaquete:    paquete.IdPaquete,
+		seguimiento:  paquete.Seguimiento,
+		tipo:         paquete.Tipo,
+		valor:        paquete.Valor,
+		origen:       paquete.Origen,
+		destino:      paquete.Destino,
+		intentos:     0,
+		fechaEntrega: "0",
+	}
+
+	cam.enviosActuales = append(cam.enviosActuales, &nuevoPaquete)
+	cam.informe = append(cam.informe, &nuevoPaquete)
+
+	return &InformeCamion{
+		IdPaquete: paquete.IdPaquete,
+		Estado:    "En camino",
+	}, nil
+}
+
 //registrarEntregaDePaquete
-func registrarEntregaDePaquete(idpaquete int, camion *Camion) {
+func registrarEntregaDePaquete(idpaquete string, camion *CamionServer) {
 	registro := camion.informe
 	for i := 0; i < len(registro); i++ {
 		if registro[i].idpaquete == idpaquete {
@@ -80,7 +244,7 @@ func registrarEntregaDePaquete(idpaquete int, camion *Camion) {
 }
 
 //sumarIntentoEntrega is
-func sumarIntentoEntrega(idpaquete int, camion *Camion) {
+func sumarIntentoEntrega(idpaquete string, camion *CamionServer) {
 	registro := camion.informe
 	for i := 0; i < len(registro); i++ {
 		if registro[i].idpaquete == idpaquete {
@@ -91,7 +255,7 @@ func sumarIntentoEntrega(idpaquete int, camion *Camion) {
 }
 
 //newRegistro is
-func newRegistro(idpaquete int, tipo string, valor int, origen string, destino string, intentos int, fechaEntrega string) *Registro {
+func newRegistro(idpaquete string, tipo string, valor int64, origen string, destino string, intentos int64, fechaEntrega string) *Registro {
 	registro := Registro{idpaquete: idpaquete,
 		tipo:         tipo,
 		origen:       origen,
@@ -102,7 +266,7 @@ func newRegistro(idpaquete int, tipo string, valor int, origen string, destino s
 }
 
 //newCamion is
-func newCamion(tipo string) *Camion {
+func newCamion(tipo string) *CamionServer {
 	camion := CamionServer{tipo: tipo}
 	camion.capacidad = 2
 	return &camion
