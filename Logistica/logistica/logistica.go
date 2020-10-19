@@ -22,7 +22,7 @@ type RegistroLogistica struct {
 	timestamp    string
 }
 
-//ServerCliente is
+//ServerLogistica is
 type ServerLogistica struct {
 	ListaEnvios      []*RegistroLogistica
 	ColaRetail       []*RegistroLogistica
@@ -77,6 +77,7 @@ func (s *ServerLogistica) NuevaOrden(ctx context.Context, orden *OrdenCliente) (
 
 //InformarSeguimiento is
 func (s *ServerLogistica) InformarSeguimiento(ctx context.Context, codSeguimiento *SeguimientoCliente) (*SeguimientoCliente, error) {
+
 	resultado := &SeguimientoCliente{
 		Seguimiento: -1,
 		Estado:      "No existe",
@@ -95,15 +96,37 @@ func (s *ServerLogistica) InformarSeguimiento(ctx context.Context, codSeguimient
 	return resultado, nil
 }
 
+//InformarEntrega is
 func (s *ServerLogistica) InformarEntrega(ctx context.Context, codSeguimiento *InformeCamion) (*InformeCamion, error) {
 
-	return &InformeCamion{
-		IdPaquete: 0,
-		Estado:    "Muy lindo",
-	}, nil
+	resultado := &InformeCamion{
+		IdPaquete: "-1",
+		Estado:    "Hola Leo",
+	}
+
+	for i := 0; i < len(s.ListaEnvios); i++ {
+		if s.ListaEnvios[i].idpaquete == codSeguimiento.IdPaquete {
+			resultado = &InformeCamion{
+				IdPaquete: codSeguimiento.IdPaquete,
+				Estado:    codSeguimiento.Estado,
+			}
+			s.ListaEnvios[i].estado = codSeguimiento.Estado
+			/*Comunicacion con Finanzas
+
+
+
+
+
+
+			 */
+		}
+	}
+
+	return resultado, nil
 
 }
 
+//AsignarPaquete is
 func (s *ServerLogistica) AsignarPaquete(ctx context.Context, presentacionCamion *AsignacionCamion) (*PaqueteRegistro, error) {
 
 	resultado := &PaqueteRegistro{

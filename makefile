@@ -7,7 +7,7 @@ runLogistica:
 .PHONY: compileLogistica
 compileLogistica:
 	protoc -I Logistica/logistica/ Logistica/logistica/logistica.proto --go_out=plugins=grpc:Logistica/logistica/
-
+#protoc -I Logistica\logistica\ Logistica\logistica\logistica.proto --go_out=plugins=grpc:Logistica\logistica\
 #··················································································································
 #················································Cliente···························································
 .PHONY: runCliente

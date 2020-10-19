@@ -20,7 +20,7 @@ message SeguimientoCliente{
 }
 
 message informeCamion {
-    int64 idPaquete = 1;
+    string idPaquete = 1;
     string estado = 2;
 }
 
