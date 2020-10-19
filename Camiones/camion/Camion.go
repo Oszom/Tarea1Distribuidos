@@ -1,32 +1,16 @@
 package camion
 
 import (
-	"fmt"
+	context "context"
 	"math/rand"
 	"time"
 
 	wr "github.com/mroth/weightedrand"
 )
 
-// CamionServer is
-type CamionServer struct {
-	tipo           string
-	capacidad      int
-	informe        []*Registro
-	enviosActuales []*Registro
-}
-
 //Registro is
-type Registro struct {
-	idpaquete    int
-	tipo         string
-	valor        int
-	origen       string
-	destino      string
-	intentos     int
-	fechaEntrega string
-}
 
+/*
 func main() {
 	//lis, err := net.Listen("tcp", ":9000")
 	//if err != nil {
@@ -64,6 +48,48 @@ func main() {
 	fmt.Println(camionNormal)
 	result := EntregarPaquete()
 	fmt.Println(result)
+}
+*/
+
+// CamionServer is
+type CamionServer struct {
+	tipo           string
+	capacidad      int
+	informe        []*Registro
+	enviosActuales []*Registro
+}
+
+type Registro struct {
+	idpaquete    string
+	tipo         string
+	valor        int64
+	origen       string
+	destino      string
+	intentos     int64
+	seguimiento  int64
+	fechaEntrega string
+}
+
+func (cam *CamionServer) NuevoPaquete(ctx context.Context, paquete *PaqueteRegistro) (*InformeCamion, error) {
+
+	nuevoPaquete := Registro{
+		idpaquete:    paquete.IdPaquete,
+		seguimiento:  paquete.Seguimiento,
+		tipo:         paquete.Tipo,
+		valor:        paquete.Valor,
+		origen:       paquete.Origen,
+		destino:      paquete.Destino,
+		intentos:     0,
+		fechaEntrega: "0",
+	}
+
+	cam.enviosActuales = append(cam.enviosActuales, &nuevoPaquete)
+	cam.informe = append(cam.informe, &nuevoPaquete)
+
+	return &InformeCamion{
+		IdPaquete: paquete.IdPaquete,
+		Estado:    "En camino",
+	}, nil
 }
 
 //registrarEntregaDePaquete

@@ -39,8 +39,6 @@ type Ramo struct {
 
 //SalvarSemestre is
 func (r *Ramo) SalvarSemestre(ctx context.Context, cosita *chat.Energetica) (*chat.Energetica, error) {
-	fmt.Printf("Ayuda, hay que salvar el ramo de %s", cosita.RamoASalvar)
-	fmt.Printf("Llevo %d energeticas de sabor %s en mi alma", cosita.NEnergeticas, cosita.Sabor)
 
 	conn, err := grpc.Dial(net.JoinHostPort(r.ipCliente, r.puertoCliente), grpc.WithInsecure())
 

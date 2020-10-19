@@ -24,16 +24,31 @@ message informeCamion {
     string estado = 2;
 }
 
+message paqueteRegistro {
+	string idPaquete = 1;
+    int64 seguimiento = 2;
+    string tipo = 3;
+    int64 valor = 4;
+    int64 intentos = 5;
+    string estado = 6;
+    string origen = 7;
+    string destino = 8;
+}
+
+message asignacionCamion{
+    string tipo = 1;
+    string lastPaqueteEnviado = 2;
+}
+
 service LogisticaService {
     //······················Funciones para el Cliente······················
     rpc nuevaOrden(OrdenCliente) returns (SeguimientoCliente) {}
     rpc informarSeguimiento(SeguimientoCliente) returns (SeguimientoCliente) {}
     //······································································
     //······················Funciones para el Camion························
-    rpc informarSeguimientoCamion(informeCamion) returns (informeCamion){} //Informacion sobre el estado de seguimiento actual en el camion
-    rpc informarEntrega(informeCamion) returns (informeCamion){} //Aviso de entrega completada
+    rpc informarEntrega(informeCamion) returns (informeCamion){} //Aviso de entrega completada.
+    rpc asignarPaquete(asignacionCamion) returns (paqueteRegistro) {} //El camion va a bodega a buscar paquetes.
     //······································································
 }
 
 //*****************Comunicacion-Logistica-Finanzas*****************
-

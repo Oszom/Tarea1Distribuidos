@@ -2,6 +2,7 @@ package logistica
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	"golang.org/x/net/context"
@@ -28,6 +29,7 @@ type ServerLogistica struct {
 	ColaPrioritarios []*RegistroLogistica
 	ColaNormales     []*RegistroLogistica
 	currSeguimiento  int64
+	muxCamiones      sync.Mutex
 }
 
 //newRegistro is
@@ -93,7 +95,7 @@ func (s *ServerLogistica) InformarSeguimiento(ctx context.Context, codSeguimient
 	return resultado, nil
 }
 
-func (s *ServerLogistica) InformarSeguimientoCamion(ctx context.Context, codSeguimiento *InformeCamion) (*InformeCamion, error) {
+func (s *ServerLogistica) InformarEntrega(ctx context.Context, codSeguimiento *InformeCamion) (*InformeCamion, error) {
 
 	return &InformeCamion{
 		IdPaquete: 0,
@@ -102,11 +104,98 @@ func (s *ServerLogistica) InformarSeguimientoCamion(ctx context.Context, codSegu
 
 }
 
-func (s *ServerLogistica) InformarEntrega(ctx context.Context, codSeguimiento *InformeCamion) (*InformeCamion, error) {
+func (s *ServerLogistica) AsignarPaquete(ctx context.Context, presentacionCamion *AsignacionCamion) (*PaqueteRegistro, error) {
 
-	return &InformeCamion{
-		IdPaquete: 0,
-		Estado:    "Muy lindo",
-	}, nil
+	resultado := &PaqueteRegistro{
+		IdPaquete:   "",
+		Seguimiento: 0,
+		Tipo:        "",
+		Valor:       0,
+		Intentos:    0,
+		Estado:      "",
+		Origen:      "",
+		Destino:     "",
+	}
 
+	s.muxCamiones.Lock()
+	//Asignacion de paquete y actualizacion de cola
+
+	if presentacionCamion.Tipo == "retail" {
+		if len(s.ColaRetail) > 0 {
+
+			paqueteAEntregar := s.ColaRetail[0]
+
+			resultado = &PaqueteRegistro{
+				IdPaquete:   paqueteAEntregar.idpaquete,
+				Seguimiento: paqueteAEntregar.seguimiento,
+				Tipo:        paqueteAEntregar.tipo,
+				Valor:       paqueteAEntregar.valor,
+				Intentos:    0,
+				Estado:      paqueteAEntregar.estado,
+				Origen:      paqueteAEntregar.origen,
+				Destino:     paqueteAEntregar.destino,
+			}
+
+			//elimino elemento
+			s.ColaRetail[0] = nil
+			s.ColaRetail = s.ColaRetail[1:]
+		} else if len(s.ColaPrioritarios) > 0 && presentacionCamion.LastPaqueteEnviado == "retail" {
+			paqueteAEntregar := s.ColaPrioritarios[0]
+
+			resultado = &PaqueteRegistro{
+				IdPaquete:   paqueteAEntregar.idpaquete,
+				Seguimiento: paqueteAEntregar.seguimiento,
+				Tipo:        paqueteAEntregar.tipo,
+				Valor:       paqueteAEntregar.valor,
+				Intentos:    0,
+				Estado:      paqueteAEntregar.estado,
+				Origen:      paqueteAEntregar.origen,
+				Destino:     paqueteAEntregar.destino,
+			}
+
+			//elimino elemento
+			s.ColaPrioritarios[0] = nil
+			s.ColaPrioritarios = s.ColaPrioritarios[1:]
+		}
+	} else if presentacionCamion.Tipo == "normal" {
+		if len(s.ColaPrioritarios) > 0 {
+			paqueteAEntregar := s.ColaPrioritarios[0]
+
+			resultado = &PaqueteRegistro{
+				IdPaquete:   paqueteAEntregar.idpaquete,
+				Seguimiento: paqueteAEntregar.seguimiento,
+				Tipo:        paqueteAEntregar.tipo,
+				Valor:       paqueteAEntregar.valor,
+				Intentos:    0,
+				Estado:      paqueteAEntregar.estado,
+				Origen:      paqueteAEntregar.origen,
+				Destino:     paqueteAEntregar.destino,
+			}
+
+			//elimino elemento
+			s.ColaPrioritarios[0] = nil
+			s.ColaPrioritarios = s.ColaPrioritarios[1:]
+		} else if len(s.ColaNormales) > 0 {
+			paqueteAEntregar := s.ColaNormales[0]
+
+			resultado = &PaqueteRegistro{
+				IdPaquete:   paqueteAEntregar.idpaquete,
+				Seguimiento: paqueteAEntregar.seguimiento,
+				Tipo:        paqueteAEntregar.tipo,
+				Valor:       paqueteAEntregar.valor,
+				Intentos:    0,
+				Estado:      paqueteAEntregar.estado,
+				Origen:      paqueteAEntregar.origen,
+				Destino:     paqueteAEntregar.destino,
+			}
+
+			//elimino elemento
+			s.ColaNormales[0] = nil
+			s.ColaNormales = s.ColaNormales[1:]
+		}
+	}
+
+	s.muxCamiones.Unlock()
+
+	return resultado, nil
 }

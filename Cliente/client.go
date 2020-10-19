@@ -3,6 +3,7 @@ package main
 import (
 	logistica "Tarea1/Logistica/logistica"
 	"bufio"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -14,6 +15,7 @@ import (
 func main() {
 
 	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("Ingrese nombre de la maquina: ")
 	ip, _ := reader.ReadString('\n')
 	ip = strings.TrimSuffix(ip, "\n")
 	ip = strings.TrimSuffix(ip, "\r")
