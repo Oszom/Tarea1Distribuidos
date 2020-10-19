@@ -1,7 +1,6 @@
 package camion
 
 import (
-	context "context"
 	"math/rand"
 	"time"
 
@@ -52,7 +51,7 @@ func main() {
 */
 
 // CamionServer is
-type CamionServer struct {
+type Camion struct {
 	tipo           string
 	capacidad      int
 	informe        []*Registro
@@ -70,30 +69,8 @@ type Registro struct {
 	fechaEntrega string
 }
 
-func (cam *CamionServer) NuevoPaquete(ctx context.Context, paquete *PaqueteRegistro) (*InformeCamion, error) {
-
-	nuevoPaquete := Registro{
-		idpaquete:    paquete.IdPaquete,
-		seguimiento:  paquete.Seguimiento,
-		tipo:         paquete.Tipo,
-		valor:        paquete.Valor,
-		origen:       paquete.Origen,
-		destino:      paquete.Destino,
-		intentos:     0,
-		fechaEntrega: "0",
-	}
-
-	cam.enviosActuales = append(cam.enviosActuales, &nuevoPaquete)
-	cam.informe = append(cam.informe, &nuevoPaquete)
-
-	return &InformeCamion{
-		IdPaquete: paquete.IdPaquete,
-		Estado:    "En camino",
-	}, nil
-}
-
 //registrarEntregaDePaquete
-func registrarEntregaDePaquete(idpaquete int, camion *CamionServer) {
+func registrarEntregaDePaquete(idpaquete int, camion *Camion) {
 	registro := camion.informe
 	for i := 0; i < len(registro); i++ {
 		if registro[i].idpaquete == idpaquete {
@@ -103,7 +80,7 @@ func registrarEntregaDePaquete(idpaquete int, camion *CamionServer) {
 }
 
 //sumarIntentoEntrega is
-func sumarIntentoEntrega(idpaquete int, camion *CamionServer) {
+func sumarIntentoEntrega(idpaquete int, camion *Camion) {
 	registro := camion.informe
 	for i := 0; i < len(registro); i++ {
 		if registro[i].idpaquete == idpaquete {
@@ -125,7 +102,7 @@ func newRegistro(idpaquete int, tipo string, valor int, origen string, destino s
 }
 
 //newCamion is
-func newCamion(tipo string) *CamionServer {
+func newCamion(tipo string) *Camion {
 	camion := CamionServer{tipo: tipo}
 	camion.capacidad = 2
 	return &camion
