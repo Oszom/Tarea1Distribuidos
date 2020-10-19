@@ -18,6 +18,7 @@ runCliente:
 .PHONY: runCamion
 runCamion: 
 	protoc -I Camiones/camion/ Camiones/camion/camion.proto --go_out=plugins=grpc:Camiones/camion/
+	#protoc -I Camiones\camion\ Camiones\camion\camion.proto --go_out=plugins=grpc:Camiones\camion\
 	go run Camiones/server.go
 
 .PHONY: compileCamion

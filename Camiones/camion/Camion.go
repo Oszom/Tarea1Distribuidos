@@ -7,8 +7,10 @@ import (
 	"fmt"
 	wr "github.com/mroth/weightedrand"
 	"google.golang.org/grpc"
+	"log"
 	"math/rand"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -85,50 +87,23 @@ func main() {
 	ip = strings.TrimSuffix(ip, "\r")
 
 	fmt.Printf("Ingrese tiempo de espera machucao: ")
-	//tiempoEspera, _ := reader.ReadString('\n')
-	//tiempoEspera = strings.TrimSuffix(ip, "\n")
-	//tiempoEspera = strings.TrimSuffix(ip, "\r")
-
-	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(ip+":9000", grpc.WithInsecure())
-	if err != nil {
-		fmt.Printf("no se pudo conectar: %s\n", err)
+	tiempoEspera, _ := reader.ReadString('\n')
+	tiempoEspera = strings.TrimSuffix(ip, "\n")
+	tiempoEspera = strings.TrimSuffix(ip, "\r")
+	tiempoEsperaInt, errn := strconv.ParseInt(tiempoEspera, 10, 64)
+	if errn != nil {
+		fmt.Println("Problema de conversión del tiempo\n", errn)
 	}
+	go RecorridoCamiones("retail", ip, tiempoEsperaInt)
+	go RecorridoCamiones("retal", ip, tiempoEsperaInt)
+	go RecorridoCamiones("normal", ip, tiempoEsperaInt)
 
-	defer conn.Close()
-
-	c := logistica.NewLogisticaServiceClient(conn)
-
-	message1 := logistica.OrdenCliente{
-		Id:          "ASS-1313",
-		Producto:    "Un masajeador wink wink",
-		Valor:       1313,
-		Tienda:      "Solo Para Chicos Grandes",
-		Destino:     "Tus Nalgas",
-		Prioritario: -1,
-	}
-
-	message2 := logistica.SeguimientoCliente{
-		Seguimiento: 1,
-		Estado:      "Un masajeador wink wink",
-		Producto:    "1313",
-	}
-
-	response1, err := c.NuevaOrden(context.Background(), &message1)
-	response2, err := c.InformarSeguimiento(context.Background(), &message2)
-
-	if err != nil {
-		fmt.Printf("La polilla gigante ataco la conexion: %s\n", err)
-	}
-
-	fmt.Printf("El numero de seguimiento de la wea de producto %s es: %d\n", response1.Producto, response1.Seguimiento)
-	fmt.Printf("El pedido ql que querí saber esta %s\n", response2.Estado)
 }
 
 //RecorridoCamiones is
-func RecorridoCamiones(tipoCamion string, ip string, tiempo int32) {
+func RecorridoCamiones(tipoCamion string, ip string, tiempo int64) {
 	camion := newCamion(tipoCamion)
-
+	log.Printf("Generando camión %s", camion.tipo)
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(ip+":9000", grpc.WithInsecure())
 	if err != nil {
@@ -149,7 +124,7 @@ func RecorridoCamiones(tipoCamion string, ip string, tiempo int32) {
 		if err1 != nil {
 			fmt.Printf("no se pudo asignar paquete al camión: %s\n", err1)
 		}
-
+		log.Printf("Paquete recibido por camión %s, id seguimiento: %d", camion.tipo, response1.Seguimiento)
 		time.Sleep(time.Duration(tiempo) * time.Millisecond)
 
 		response2, err2 := c.AsignarPaquete(context.Background(), &message1)
@@ -157,6 +132,7 @@ func RecorridoCamiones(tipoCamion string, ip string, tiempo int32) {
 		if err2 != nil {
 			fmt.Printf("no se pudo asignar paquete al camión: %s\n", err2)
 		}
+		log.Printf("Paquete recibido por camión %s, id seguimiento: %d", camion.tipo, response2.Seguimiento)
 		if response2.IdPaquete != "" {
 			var registroNuevo1 = newRegistro(response2.IdPaquete, response2.Tipo, response2.Valor, response2.Origen, response2.Destino, 0, "0")
 			camion.informe = append(camion.informe, registroNuevo1)
@@ -191,16 +167,21 @@ func RecorridoCamiones(tipoCamion string, ip string, tiempo int32) {
 				//Intentar entrega
 				var intentoEntrega = EntregarPaquete()
 				if intentoEntrega == "entregado" {
+					log.Printf("Paquete de camión %s, con id seguimiento: %d entregado", camion.tipo, paqueteAEntregar.seguimiento)
 					registrarEntregaDePaquete(paqueteAEntregar.idpaquete, camion)
 					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
 					camion.enviosActuales = remove(camion.enviosActuales, posicion)
 
 				} else {
+
 					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
+					log.Printf("Paquete de camión %s, con id seguimiento: %d NO entregado (intento numero %d)", camion.tipo, paqueteAEntregar.seguimiento, paqueteAEntregar.intentos)
 
 				}
 			}
 		}
+
+		log.Printf("Fin ronda de entrega")
 
 	}
 

@@ -25,5 +25,5 @@ message asignacionCamion{
 }
 
 service CamionService{
-    rpc nuevoPaquete(paqueteRegistro) returns (paqueteRegistro) {}
+    rpc nuevoPaquete(paqueteRegistro) returns (informeCamion) {}
 }
