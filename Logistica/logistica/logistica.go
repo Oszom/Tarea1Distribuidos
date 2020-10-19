@@ -1,10 +1,9 @@
 package logistica
 
 import (
-	"fmt"
 	"sync"
 	"time"
-
+	"log"
 	"golang.org/x/net/context"
 )
 
@@ -50,11 +49,11 @@ func newRegistro(idpaquete string, tipo string, nombre string, valor int64, orig
 
 func tipoEnvio(prioridad int64) string {
 	if prioridad == 0 {
-		return "Normal"
+		return "normal"
 	} else if prioridad == 1 {
-		return "Prioritario"
+		return "prioritario"
 	} else {
-		return "Retail"
+		return "retail"
 	}
 }
 
@@ -65,8 +64,16 @@ func (s *ServerLogistica) NuevaOrden(ctx context.Context, orden *OrdenCliente) (
 	nuevaOrden := newRegistro(orden.Id, tipoEnvio, orden.Producto, orden.Valor, orden.Tienda, orden.Destino, s.currSeguimiento)
 	s.currSeguimiento++
 	s.ListaEnvios = append(s.ListaEnvios, nuevaOrden)
+	
+	if tipoEnvio == "retail"{
+		s.ColaRetail = append(s.ColaRetail,nuevaOrden)
+	} else if tipoEnvio == "prioritario"{
+		s.ColaPrioritarios = append(s.ColaPrioritarios,nuevaOrden)
+	} else if tipoEnvio == "normal"{
+		s.ColaNormales = append(s.ColaNormales,nuevaOrden)
+	}
 
-	fmt.Printf("%s\n", s.ListaEnvios)
+	log.Printf("Llego una nueva orden con ID %s",nuevaOrden.idpaquete)
 
 	return &SeguimientoCliente{
 		Seguimiento: nuevaOrden.seguimiento,
@@ -90,7 +97,13 @@ func (s *ServerLogistica) InformarSeguimiento(ctx context.Context, codSeguimient
 				Estado:      s.ListaEnvios[i].estado,
 				Producto:    s.ListaEnvios[i].nombre,
 			}
+
+			log.Printf("Se pregunto por el seguimiento de la orden %d",resultado.Seguimiento)
 		}
+	}
+
+	if resultado.Seguimiento == -1{
+		log.Printf("Se pregunto por una orden inexistente con numero de seguimiento %d",codSeguimiento.Seguimiento)
 	}
 
 	return resultado, nil
@@ -141,6 +154,7 @@ func (s *ServerLogistica) AsignarPaquete(ctx context.Context, presentacionCamion
 	}
 
 	s.muxCamiones.Lock()
+
 	//Asignacion de paquete y actualizacion de cola
 
 	if presentacionCamion.Tipo == "retail" {
@@ -216,6 +230,12 @@ func (s *ServerLogistica) AsignarPaquete(ctx context.Context, presentacionCamion
 			s.ColaNormales[0] = nil
 			s.ColaNormales = s.ColaNormales[1:]
 		}
+	}
+
+	if resultado.IdPaquete == ""{
+		log.Printf("El camion %s se va con la cola entre las piernas :'(",presentacionCamion.Tipo)
+	} else {
+		log.Printf("El camion %s, se lleva la orden %s de tipo %s",presentacionCamion.Tipo,resultado.IdPaquete,resultado.Tipo)
 	}
 
 	s.muxCamiones.Unlock()

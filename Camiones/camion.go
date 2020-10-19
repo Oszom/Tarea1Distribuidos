@@ -8,6 +8,7 @@ import (
 	wr "github.com/mroth/weightedrand"
 	"google.golang.org/grpc"
 	"log"
+	"sync"
 	"math/rand"
 	"os"
 	"strconv"
@@ -80,6 +81,9 @@ type Registro struct {
 }
 
 func main() {
+
+	var wg sync.WaitGroup
+
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Printf("Ingrese nombre de la maquina: ")
 	ip, _ := reader.ReadString('\n')
@@ -88,22 +92,28 @@ func main() {
 
 	fmt.Printf("Ingrese tiempo de espera machucao: ")
 	tiempoEspera, _ := reader.ReadString('\n')
-	tiempoEspera = strings.TrimSuffix(ip, "\n")
-	tiempoEspera = strings.TrimSuffix(ip, "\r")
+	tiempoEspera = strings.TrimSuffix(tiempoEspera, "\n")
+	tiempoEspera = strings.TrimSuffix(tiempoEspera, "\r")
 	tiempoEsperaInt, errn := strconv.ParseInt(tiempoEspera, 10, 64)
 	if errn != nil {
 		fmt.Println("Problema de conversión del tiempo\n", errn)
 	}
-	go RecorridoCamiones("retail", ip, tiempoEsperaInt,"9100")
-	go RecorridoCamiones("retal", ip, tiempoEsperaInt,"9101")
-	go RecorridoCamiones("normal", ip, tiempoEsperaInt,"9012")
+	wg.Add(1)
+	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt,"9100", 1)
+	wg.Add(1)
+	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt,"9101", 2)
+	wg.Add(1)
+	go RecorridoCamiones(&wg, "normal", ip, tiempoEsperaInt,"9102", 1)
+
+	wg.Wait()
 
 }
 
 //RecorridoCamiones is
-func RecorridoCamiones(tipoCamion string, ip string, tiempo int64, puerto string) {
+func RecorridoCamiones(wg *sync.WaitGroup,tipoCamion string, ip string, tiempo int64, puerto string, numeroRet int) {
+	defer wg.Done()
 	camion := newCamion(tipoCamion)
-	log.Printf("Generando camión %s", camion.tipo)
+	log.Printf("Generando camión %s %d, con un tiempo de espera de %d segundos", camion.tipo, numeroRet, tiempo)
 	var conn *grpc.ClientConn
 	conn, err := grpc.Dial(ip+":"+puerto, grpc.WithInsecure())
 	if err != nil {
@@ -119,32 +129,37 @@ func RecorridoCamiones(tipoCamion string, ip string, tiempo int64, puerto string
 		}
 
 		c := logistica.NewLogisticaServiceClient(conn)
-		response1, err1 := c.AsignarPaquete(context.Background(), &message1)
-
-		if err1 != nil {
-			fmt.Printf("no se pudo asignar paquete al camión: %s\n", err1)
+		for {
+			response1, err1 := c.AsignarPaquete(context.Background(), &message1)
+			log.Printf("%s",response1)
+			if err1 != nil {
+				fmt.Printf("no se pudo asignar paquete al camión %s %d (puerto: %s): %s\n", camion.tipo, numeroRet, puerto,err1)
+			}
+			time.Sleep(time.Duration(tiempo) * time.Second)
+			if response1.IdPaquete != ""{
+				var registroNuevo1 = newRegistro(response1.IdPaquete, response1.Tipo, response1.Valor, response1.Origen, response1.Destino, 0, "0")
+				camion.informe = append(camion.informe, registroNuevo1)
+				camion.enviosActuales = append(camion.enviosActuales, registroNuevo1)
+				log.Printf("Paquete recibido por camión %s %d, id seguimiento: %d", camion.tipo, numeroRet, response1.Seguimiento)
+				break
+			}
 		}
-		log.Printf("Paquete recibido por camión %s, id seguimiento: %d", camion.tipo, response1.Seguimiento)
-		time.Sleep(time.Duration(tiempo) * time.Millisecond)
 
 		response2, err2 := c.AsignarPaquete(context.Background(), &message1)
 
 		if err2 != nil {
-			fmt.Printf("no se pudo asignar paquete al camión: %s\n", err2)
+			fmt.Printf("no se pudo asignar paquete al camión %s %d (puerto: %s): %s\n", camion.tipo, numeroRet, puerto,err2)
 		}
-		log.Printf("Paquete recibido por camión %s, id seguimiento: %d", camion.tipo, response2.Seguimiento)
+		log.Printf("Paquete recibido por camión %s %d, id seguimiento: %d", camion.tipo, numeroRet, response2.Seguimiento)
 		if response2.IdPaquete != "" {
-			var registroNuevo1 = newRegistro(response2.IdPaquete, response2.Tipo, response2.Valor, response2.Origen, response2.Destino, 0, "0")
-			camion.informe = append(camion.informe, registroNuevo1)
-			camion.enviosActuales = append(camion.enviosActuales, registroNuevo1)
-
+			var registroNuevo2 = newRegistro(response2.IdPaquete, response2.Tipo, response2.Valor, response2.Origen, response2.Destino, 0, "0")
+			camion.informe = append(camion.informe, registroNuevo2)
+			camion.enviosActuales = append(camion.enviosActuales, registroNuevo2)
 		}
 
-		var registroNuevo2 = newRegistro(response1.IdPaquete, response1.Tipo, response1.Valor, response1.Origen, response1.Destino, 0, "0")
-		camion.informe = append(camion.informe, registroNuevo2)
-		camion.enviosActuales = append(camion.enviosActuales, registroNuevo2)
 		var paqueteAEntregar *Registro
 		var posicion int
+
 		for i := 0; i < 3; i++ {
 			for j := 0; j < 2; j++ {
 				if len(camion.enviosActuales) == 2 {
@@ -156,18 +171,20 @@ func RecorridoCamiones(tipoCamion string, ip string, tiempo int64, puerto string
 						posicion = 1
 					}
 
-				} else {
+				} else if len(camion.enviosActuales) == 1 {
 					if camion.enviosActuales[0].fechaEntrega == "0" {
 						paqueteAEntregar = camion.enviosActuales[0]
 						posicion = 0
 					}
 
+				} else {
+					break
 				}
 
 				//Intentar entrega
 				var intentoEntrega = EntregarPaquete()
 				if intentoEntrega == "entregado" {
-					log.Printf("Paquete de camión %s, con id seguimiento: %d entregado", camion.tipo, paqueteAEntregar.seguimiento)
+					log.Printf("Paquete de camión %s %d, con id seguimiento: %d entregado", camion.tipo, numeroRet, paqueteAEntregar.seguimiento)
 					registrarEntregaDePaquete(paqueteAEntregar.idpaquete, camion)
 					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
 					camion.enviosActuales = remove(camion.enviosActuales, posicion)
@@ -175,7 +192,7 @@ func RecorridoCamiones(tipoCamion string, ip string, tiempo int64, puerto string
 				} else {
 
 					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
-					log.Printf("Paquete de camión %s, con id seguimiento: %d NO entregado (intento numero %d)", camion.tipo, paqueteAEntregar.seguimiento, paqueteAEntregar.intentos)
+					log.Printf("Paquete de camión %s %d, con id seguimiento: %d NO entregado (intento numero %d)", camion.tipo, numeroRet, paqueteAEntregar.seguimiento, paqueteAEntregar.intentos)
 
 				}
 			}
@@ -190,7 +207,7 @@ func RecorridoCamiones(tipoCamion string, ip string, tiempo int64, puerto string
 func remove(slice []*Registro, s int) []*Registro {
 	return append(slice[:s], slice[s+1:]...)
 }
-
+/*
 //NuevoPaquete is
 func (cam *CamionServer) NuevoPaquete(ctx context.Context, paquete *PaqueteRegistro) (*InformeCamion, error) {
 
@@ -213,7 +230,7 @@ func (cam *CamionServer) NuevoPaquete(ctx context.Context, paquete *PaqueteRegis
 		Estado:    "En camino",
 	}, nil
 }
-
+*/
 //registrarEntregaDePaquete
 func registrarEntregaDePaquete(idpaquete string, camion *CamionServer) {
 	registro := camion.informe
