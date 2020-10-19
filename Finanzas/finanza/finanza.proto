@@ -1,0 +1,7 @@
+syntax = "proto3";
+package finanza;
+
+message envioExistoso {
+    string idPaquete = 1;
+    
+}
