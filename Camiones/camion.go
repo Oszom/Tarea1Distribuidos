@@ -1,4 +1,4 @@
-package camion
+package main
 
 import (
 	logistica "Tarea1/Logistica/logistica"
@@ -94,18 +94,18 @@ func main() {
 	if errn != nil {
 		fmt.Println("Problema de conversión del tiempo\n", errn)
 	}
-	go RecorridoCamiones("retail", ip, tiempoEsperaInt)
-	go RecorridoCamiones("retal", ip, tiempoEsperaInt)
-	go RecorridoCamiones("normal", ip, tiempoEsperaInt)
+	go RecorridoCamiones("retail", ip, tiempoEsperaInt,"9100")
+	go RecorridoCamiones("retal", ip, tiempoEsperaInt,"9101")
+	go RecorridoCamiones("normal", ip, tiempoEsperaInt,"9012")
 
 }
 
 //RecorridoCamiones is
-func RecorridoCamiones(tipoCamion string, ip string, tiempo int64) {
+func RecorridoCamiones(tipoCamion string, ip string, tiempo int64, puerto string) {
 	camion := newCamion(tipoCamion)
 	log.Printf("Generando camión %s", camion.tipo)
 	var conn *grpc.ClientConn
-	conn, err := grpc.Dial(ip+":9000", grpc.WithInsecure())
+	conn, err := grpc.Dial(ip+":"+puerto, grpc.WithInsecure())
 	if err != nil {
 		fmt.Printf("no se pudo conectar: %s\n", err)
 	}
