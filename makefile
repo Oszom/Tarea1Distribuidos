@@ -1,3 +1,7 @@
+.PHONY: arreglarPath
+arreglarPath:
+	export PATH="$PATH:$(go env GOPATH)/bin"
+
 #················································Logistica·························································
 .PHONY: runLogistica
 runLogistica: 
@@ -7,6 +11,17 @@ runLogistica:
 .PHONY: compileLogistica
 compileLogistica:
 	protoc -I Logistica/logistica/ Logistica/logistica/logistica.proto --go_out=plugins=grpc:Logistica/logistica/
+#protoc -I Logistica\logistica\ Logistica\logistica\logistica.proto --go_out=plugins=grpc:Logistica\logistica\
+#··················································································································
+#················································Finanzas·························································
+.PHONY: runFinanzas
+runFinanzas: 
+	protoc -I Finanzas/finanza/ Finanzas/finanza/finanza.proto --go_out=plugins=grpc:Finanzas/finanza/
+	go run Finanzas/server.go
+
+.PHONY: compileFinanzas
+compileFinanzas:
+	protoc -I Finanzas/finanza/ Finanzas/finanza/finanza.proto --go_out=plugins=grpc:Finanzas/finanza/
 #protoc -I Logistica\logistica\ Logistica\logistica\logistica.proto --go_out=plugins=grpc:Logistica\logistica\
 #··················································································································
 #················································Cliente···························································
@@ -20,16 +35,3 @@ runCamion:
 	go run Camiones/camion.go
 #protoc -I Camiones\camion\ Camiones\camion\camion.proto --go_out=plugins=grpc:Camiones\camion
 #··················································································································
-
-.PHONY: server
-server: ## Build and run server.
-	go run -race -ldflags "-s -w" -o bin/server server/main.go
-	bin/server
- 
-.PHONY: client
-client: ## Build and run client.
-	go run -race -ldflags "-s -w" -o Cliente/client.go
-
-.PHONY: compilePrueba
-compilePrueba: 
-	protoc -I "Prueba Conexion/Greeter" "Prueba Conexion/Greeter/chat.proto" --go_out=plugins=grpc:"Prueba Conexion/Greeter/chat"

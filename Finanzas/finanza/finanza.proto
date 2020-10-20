@@ -1,7 +1,26 @@
 syntax = "proto3";
 package finanza;
+option go_package = "Tarea1/Finanzas/finanza";
 
-message envioExistoso {
-    string idPaquete = 1;
-    
+message paqueteRegistro {
+	string idPaquete = 1;
+    int64 seguimiento = 2;
+    string tipo = 3;
+    int64 valor = 4;
+    int64 intentos = 5;
+    string estado = 6;
+    string origen = 7;
+    string destino = 8;
+    string timestamp = 9;
+    string nombre = 10;
+    string fechaEntrega = 11;
+    float ganancia = 12;
+}
+
+message ack {
+    string IdPaquete = 1;
+}
+
+service FinanzaService {
+    rpc informarEntrega(paqueteRegistro) returns (ack) {}
 }

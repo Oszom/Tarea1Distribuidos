@@ -1,5 +1,6 @@
 syntax = "proto3";
 package logistica;
+option go_package = "Tarea1/Logistica/logistica";
 
 //*****************Comunicacion-Logistica-Cliente*****************
 
@@ -22,6 +23,7 @@ message SeguimientoCliente{
 message informeCamion {
     string idPaquete = 1;
     string estado = 2;
+    int64 intentos = 3;
 }
 
 message paqueteRegistro {

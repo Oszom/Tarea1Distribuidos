@@ -5,6 +5,7 @@ import (
 	"time"
 	"log"
 	"golang.org/x/net/context"
+	"Tarea1/Finanzas/finanza"
 )
 
 //RegistroLogistica is
@@ -18,6 +19,7 @@ type RegistroLogistica struct {
 	fechaEntrega string
 	seguimiento  int64
 	estado       string
+	intentos int64
 	timestamp    string
 }
 
@@ -29,6 +31,7 @@ type ServerLogistica struct {
 	ColaNormales     []*RegistroLogistica
 	currSeguimiento  int64
 	muxCamiones      sync.Mutex
+	ipFinanzas string
 }
 
 //newRegistro is
@@ -115,6 +118,7 @@ func (s *ServerLogistica) InformarEntrega(ctx context.Context, codSeguimiento *I
 	resultado := &InformeCamion{
 		IdPaquete: "-1",
 		Estado:    "Hola Leo",
+		Intentos: -1
 	}
 
 	for i := 0; i < len(s.ListaEnvios); i++ {
@@ -124,14 +128,38 @@ func (s *ServerLogistica) InformarEntrega(ctx context.Context, codSeguimiento *I
 				Estado:    codSeguimiento.Estado,
 			}
 			s.ListaEnvios[i].estado = codSeguimiento.Estado
-			/*Comunicacion con Finanzas
+			s.ListaEnvios[i].intentos = codSeguimiento.Intentos
 
+			//Comunicacion con Finanzas
 
+			var conn *grpc.ClientConn
+			conn, err := grpc.Dial(s.ipFinanzas+":9000", grpc.WithInsecure())
+			if err != nil {
+				log.Fatalf("no se pudo conectar: %s", err)
+			}
 
+			defer conn.Close()
 
+			c := finanza.NewFinanzaServiceClient(conn)
 
+			mensajeEEE := &finanza.PaqueteRegistro{
+				IdPaquete: s.ListaEnvios[i].idpaquete,
+				Seguimiento: s.ListaEnvios[i].seguimiento,
+				Tipo: s.ListaEnvios[i].tipo,
+				Valor: s.ListaEnvios[i].valor,
+				Intentos: s.ListaEnvios[i].intentos,
+				Estado: s.ListaEnvios[i].estado,
+				Origen: s.ListaEnvios[i].origen,
+				Destino: s.ListaEnvios[i].destino,
+				Timestamp: s.ListaEnvios[i].timestamp,
+				Nombre: s.ListaEnvios[i].nombre,
+				FechaEntrega: s.ListaEnvios[i].fechaEntrega,
+			}
 
-			 */
+			res, err := c.InformarEntrega(context.Background(),mensajeEEE)
+			if err != nil{
+				log.Printf("Error al conectarme a finanzas\n(%s)",err)
+			}
 		}
 	}
 

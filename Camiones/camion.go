@@ -185,8 +185,17 @@ func RecorridoCamiones(wg *sync.WaitGroup,tipoCamion string, ip string, tiempo i
 				var intentoEntrega = EntregarPaquete()
 				if intentoEntrega == "entregado" {
 					log.Printf("Paquete de camión %s %d, con id seguimiento: %d entregado", camion.tipo, numeroRet, paqueteAEntregar.seguimiento)
-					registrarEntregaDePaquete(paqueteAEntregar.idpaquete, camion)
 					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
+					registrarEntregaDePaquete(paqueteAEntregar.idpaquete, camion)
+					newMessage := logistica.InformeCamion{
+						IdPaquete: paqueteAEntregar.idpaquete,
+						Estado: "Recibido",
+						intentos: paqueteAEntregar.intentos + 1
+					}
+					res, err := c.InformarEntrega(context.Background(), &newMessage)
+					if err != nil {
+						log.PrintF("Error al momento de avisar a logistica\n(%s)",err)
+					}
 					camion.enviosActuales = remove(camion.enviosActuales, posicion)
 
 				} else {
@@ -196,6 +205,20 @@ func RecorridoCamiones(wg *sync.WaitGroup,tipoCamion string, ip string, tiempo i
 
 				}
 			}
+		}
+
+		if len(camion.enviosActuales == 1) {
+			sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
+			newMessage := logistica.InformeCamion{
+				IdPaquete: paqueteAEntregar.idpaquete,
+				Estado: "No Recibido",
+				intentos: paqueteAEntregar.intentos + 1
+			}
+			res, err := c.InformarEntrega(context.Background(), &newMessage)
+			if err != nil {
+				log.PrintF("Error al momento de avisar a logistica\n(%s)",err)
+			}
+			camion.enviosActuales = remove(camion.enviosActuales, posicion)
 		}
 
 		log.Printf("Fin ronda de entrega")

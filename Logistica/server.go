@@ -39,9 +39,17 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	s := logistica.ServerLogistica{}
-
 	log.Printf("El IP del servidor es: %v", GetOutboundIP())
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Printf("Ingrese nombre de la maquina donde se encuentra finanzas: ")
+	ipFinanzas, _ := reader.ReadString('\n')
+	ipFinanzas = strings.TrimSuffix(ipFinanzas, "\n")
+	ipFinanzas = strings.TrimSuffix(ipFinanzas, "\r")
+
+	s := logistica.ServerLogistica{
+		ipFinanzas = ipFinanzas
+	}
 
 	wg.Add(1)
 	go servirServidor(&wg, &s, "9000")
