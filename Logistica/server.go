@@ -2,10 +2,14 @@ package main
 
 import (
 	"Tarea1/Logistica/logistica"
+	"bufio"
+	"fmt"
+	"google.golang.org/grpc"
 	"log"
 	"net"
+	"os"
+	"strings"
 	"sync"
-	"google.golang.org/grpc"
 )
 
 //GetOutboundIP is
@@ -21,7 +25,7 @@ func GetOutboundIP() net.IP {
 	return localAddr.IP
 }
 
-func servirServidor(wg *sync.WaitGroup, logisticaServer *logistica.ServerLogistica, puerto string){
+func servirServidor(wg *sync.WaitGroup, logisticaServer *logistica.ServerLogistica, puerto string) {
 	lis, err := net.Listen("tcp", ":"+puerto)
 	if err != nil {
 		log.Fatalf("Failed to listen on port %s: %v", puerto, err)
@@ -47,9 +51,8 @@ func main() {
 	ipFinanzas = strings.TrimSuffix(ipFinanzas, "\n")
 	ipFinanzas = strings.TrimSuffix(ipFinanzas, "\r")
 
-	s := logistica.ServerLogistica{
-		ipFinanzas = ipFinanzas
-	}
+	s := logistica.ServerLogistica{}
+	s.SetIPFinanzas(ipFinanzas)
 
 	wg.Add(1)
 	go servirServidor(&wg, &s, "9000")

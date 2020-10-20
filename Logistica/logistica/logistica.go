@@ -51,6 +51,10 @@ func newRegistro(idpaquete string, tipo string, nombre string, valor int64, orig
 	return &registro
 }
 
+func (s *ServerLogistica) SetIPFinanzas(ip string) {
+	s.ipFinanzas = ip
+}
+
 func tipoEnvio(prioridad int64) string {
 	if prioridad == 0 {
 		return "normal"
