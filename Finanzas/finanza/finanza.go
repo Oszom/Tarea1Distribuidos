@@ -48,7 +48,7 @@ func calcularGanancias(valorProducto int64, intentosT int64, tipoPedido string, 
 
 }
 
-func (sf *ServerFinzanza) informarEntrega(ctx context.Context, paquete *PaqueteRegistro) (*Ack, error) {
+func (sf *ServerFinzanza) InformarEntrega(ctx context.Context, paquete *PaqueteRegistro) (*Ack, error) {
 
 	gananciaEnvio := calcularGanancias(paquete.Valor, paquete.Intentos, paquete.Tipo, paquete.FechaEntrega != "0")
 
