@@ -3,10 +3,13 @@ package main
 import (
 	logistica "Tarea1/Logistica/logistica"
 	"bufio"
+
 	//"encoding/csv"
 	"fmt"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+
 	//"io"
 	"log"
 	"os"
@@ -17,7 +20,7 @@ import (
 func main() {
 
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("Ingrese nombre de la maquina: ")
+	fmt.Printf("Ingrese nombre de la maquina donde se encuentra alojado logistica: ")
 	ip, _ := reader.ReadString('\n')
 	ip = strings.TrimSuffix(ip, "\n")
 	ip = strings.TrimSuffix(ip, "\r")

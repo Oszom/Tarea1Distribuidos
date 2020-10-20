@@ -5,8 +5,6 @@ import (
 	"bufio"
 	context "context"
 	"fmt"
-	wr "github.com/mroth/weightedrand"
-	"google.golang.org/grpc"
 	"log"
 	"math/rand"
 	"os"
@@ -14,6 +12,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	wr "github.com/mroth/weightedrand"
+	"google.golang.org/grpc"
 )
 
 //Registro is
@@ -68,11 +69,11 @@ func main() {
 	}
 
 	wg.Add(1)
-	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt, "9100", 1,tiempoEntregaInt)
+	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt, "9100", 1, tiempoEntregaInt)
 	wg.Add(1)
-	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt, "9101", 2,tiempoEntregaInt)
+	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt, "9101", 2, tiempoEntregaInt)
 	wg.Add(1)
-	go RecorridoCamiones(&wg, "normal", ip, tiempoEsperaInt, "9102", 1,tiempoEntregaInt)
+	go RecorridoCamiones(&wg, "normal", ip, tiempoEsperaInt, "9102", 1, tiempoEntregaInt)
 
 	wg.Wait()
 
@@ -153,19 +154,19 @@ func RecorridoCamiones(wg *sync.WaitGroup, tipoCamion string, ip string, tiempo 
 				//Intentar entrega
 				time.Sleep(time.Duration(tiempoEntrega) * time.Second)
 				var intentoEntrega = EntregarPaquete()
-				
+
 				if intentoEntrega == "entregado" {
 					log.Printf("Paquete de camión %s %d, con id seguimiento: %d entregado", camion.tipo, numeroRet, paqueteAEntregar.seguimiento)
 					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
 					registrarEntregaDePaquete(paqueteAEntregar.idpaquete, camion)
 					newMessage := logistica.InformeCamion{
 						IdPaquete: paqueteAEntregar.idpaquete,
-						Estado: "Recibido",
-						intentos: paqueteAEntregar.intentos + 1
+						Estado:    "Recibido",
+						Intentos:  paqueteAEntregar.intentos + 1,
 					}
-					res, err := c.InformarEntrega(context.Background(), &newMessage)
+					_, err := c.InformarEntrega(context.Background(), &newMessage)
 					if err != nil {
-						log.PrintF("Error al momento de avisar a logistica\n(%s)",err)
+						log.Printf("Error al momento de avisar a logistica\n(%s)", err)
 					}
 					camion.enviosActuales = remove(camion.enviosActuales, posicion)
 
@@ -178,16 +179,16 @@ func RecorridoCamiones(wg *sync.WaitGroup, tipoCamion string, ip string, tiempo 
 			}
 		}
 
-		if len(camion.enviosActuales == 1) {
+		if len(camion.enviosActuales) == 1 {
 			sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
 			newMessage := logistica.InformeCamion{
 				IdPaquete: paqueteAEntregar.idpaquete,
-				Estado: "No Recibido",
-				intentos: paqueteAEntregar.intentos + 1
+				Estado:    "No Recibido",
+				Intentos:  paqueteAEntregar.intentos + 1,
 			}
-			res, err := c.InformarEntrega(context.Background(), &newMessage)
+			_, err := c.InformarEntrega(context.Background(), &newMessage)
 			if err != nil {
-				log.PrintF("Error al momento de avisar a logistica\n(%s)",err)
+				log.Printf("Error al momento de avisar a logistica\n(%s)", err)
 			}
 			camion.enviosActuales = remove(camion.enviosActuales, posicion)
 		}
