@@ -8,56 +8,15 @@ import (
 	wr "github.com/mroth/weightedrand"
 	"google.golang.org/grpc"
 	"log"
-	"sync"
 	"math/rand"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 //Registro is
-
-/*
-func main() {
-	//lis, err := net.Listen("tcp", ":9000")
-	//if err != nil {
-	//	log.Fatalf("Failed to listen on port 9000: %v", err)
-	//}
-
-	//s := chat.Server{}
-
-	//grpcServer := grpc.NewServer()
-
-	//chat.RegisterChatServiceServer(grpcServer, &s)
-
-	//if err := grpcServer.Serve(lis); err != nil {
-	//	log.Fatalf("Failed to serve gRPC server over port 9000: %v", err)
-	//}
-
-	camionNormal := newCamion("Normal")
-	//camionRetail1 := newCamion("Retail")
-	//camionRetail2 := newCamion("Retail")
-
-	entrega := newRegistro(1, "retail", 30, "casa andres", "casa jorge", 1, "-")
-	camionNormal.informe = append(camionNormal.informe, entrega)
-
-	for n := 0; n < 1; n++ {
-		fmt.Println("Antes de agregar intento de entrega: ")
-		fmt.Println(camionNormal.informe[n])
-	}
-	sumarIntentoEntrega(1, camionNormal)
-	registrarEntregaDePaquete(1, camionNormal)
-	for n := 0; n < 1; n++ {
-		fmt.Println("Despues de agregar intento de entrega: ")
-		fmt.Println(camionNormal.informe[n])
-	}
-
-	fmt.Println(camionNormal)
-	result := EntregarPaquete()
-	fmt.Println(result)
-}
-*/
 
 // CamionServer is
 type CamionServer struct {
@@ -99,18 +58,18 @@ func main() {
 		fmt.Println("Problema de conversión del tiempo\n", errn)
 	}
 	wg.Add(1)
-	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt,"9100", 1)
+	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt, "9100", 1)
 	wg.Add(1)
-	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt,"9101", 2)
+	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt, "9101", 2)
 	wg.Add(1)
-	go RecorridoCamiones(&wg, "normal", ip, tiempoEsperaInt,"9102", 1)
+	go RecorridoCamiones(&wg, "normal", ip, tiempoEsperaInt, "9102", 1)
 
 	wg.Wait()
 
 }
 
 //RecorridoCamiones is
-func RecorridoCamiones(wg *sync.WaitGroup,tipoCamion string, ip string, tiempo int64, puerto string, numeroRet int) {
+func RecorridoCamiones(wg *sync.WaitGroup, tipoCamion string, ip string, tiempo int64, puerto string, numeroRet int) {
 	defer wg.Done()
 	camion := newCamion(tipoCamion)
 	log.Printf("Generando camión %s %d, con un tiempo de espera de %d segundos", camion.tipo, numeroRet, tiempo)
@@ -131,12 +90,12 @@ func RecorridoCamiones(wg *sync.WaitGroup,tipoCamion string, ip string, tiempo i
 		c := logistica.NewLogisticaServiceClient(conn)
 		for {
 			response1, err1 := c.AsignarPaquete(context.Background(), &message1)
-			log.Printf("%s",response1)
+			log.Printf("%s", response1)
 			if err1 != nil {
-				fmt.Printf("no se pudo asignar paquete al camión %s %d (puerto: %s): %s\n", camion.tipo, numeroRet, puerto,err1)
+				fmt.Printf("no se pudo asignar paquete al camión %s %d (puerto: %s): %s\n", camion.tipo, numeroRet, puerto, err1)
 			}
 			time.Sleep(time.Duration(tiempo) * time.Second)
-			if response1.IdPaquete != ""{
+			if response1.IdPaquete != "" {
 				var registroNuevo1 = newRegistro(response1.IdPaquete, response1.Tipo, response1.Valor, response1.Origen, response1.Destino, 0, "0")
 				camion.informe = append(camion.informe, registroNuevo1)
 				camion.enviosActuales = append(camion.enviosActuales, registroNuevo1)
@@ -148,7 +107,7 @@ func RecorridoCamiones(wg *sync.WaitGroup,tipoCamion string, ip string, tiempo i
 		response2, err2 := c.AsignarPaquete(context.Background(), &message1)
 
 		if err2 != nil {
-			fmt.Printf("no se pudo asignar paquete al camión %s %d (puerto: %s): %s\n", camion.tipo, numeroRet, puerto,err2)
+			fmt.Printf("no se pudo asignar paquete al camión %s %d (puerto: %s): %s\n", camion.tipo, numeroRet, puerto, err2)
 		}
 		log.Printf("Paquete recibido por camión %s %d, id seguimiento: %d", camion.tipo, numeroRet, response2.Seguimiento)
 		if response2.IdPaquete != "" {
@@ -230,6 +189,7 @@ func RecorridoCamiones(wg *sync.WaitGroup,tipoCamion string, ip string, tiempo i
 func remove(slice []*Registro, s int) []*Registro {
 	return append(slice[:s], slice[s+1:]...)
 }
+
 /*
 //NuevoPaquete is
 func (cam *CamionServer) NuevoPaquete(ctx context.Context, paquete *PaqueteRegistro) (*InformeCamion, error) {
