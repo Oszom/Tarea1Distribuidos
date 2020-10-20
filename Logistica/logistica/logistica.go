@@ -2,11 +2,12 @@ package logistica
 
 import (
 	"Tarea1/Finanzas/finanza"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	"log"
 	"sync"
 	"time"
+
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 //RegistroLogistica is
@@ -266,7 +267,7 @@ func (s *ServerLogistica) AsignarPaquete(ctx context.Context, presentacionCamion
 	}
 
 	if resultado.IdPaquete == "" {
-		log.Printf("El camion %s se va con la cola entre las piernas :'(", presentacionCamion.Tipo)
+		log.Printf("El camion %s no se lleva un paquete", presentacionCamion.Tipo)
 	} else {
 		log.Printf("El camion %s, se lleva la orden %s de tipo %s", presentacionCamion.Tipo, resultado.IdPaquete, resultado.Tipo)
 	}
