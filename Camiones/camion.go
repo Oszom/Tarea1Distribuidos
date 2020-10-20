@@ -101,7 +101,6 @@ func RecorridoCamiones(wg *sync.WaitGroup, tipoCamion string, ip string, tiempo 
 		c := logistica.NewLogisticaServiceClient(conn)
 		for {
 			response1, err1 := c.AsignarPaquete(context.Background(), &message1)
-			log.Printf("%s", response1)
 			if err1 != nil {
 				fmt.Printf("no se pudo asignar paquete al camión %s %d (puerto: %s): %s\n", camion.tipo, numeroRet, puerto, err1)
 			}
@@ -130,51 +129,54 @@ func RecorridoCamiones(wg *sync.WaitGroup, tipoCamion string, ip string, tiempo 
 		var paqueteAEntregar *Registro
 		var posicion int
 
-		for i := 0; i < 3; i++ {
-			for j := 0; j < 2; j++ {
-				if len(camion.enviosActuales) == 2 {
-					if camion.enviosActuales[0].valor >= camion.enviosActuales[1].valor && camion.enviosActuales[j].fechaEntrega == "0" {
-						paqueteAEntregar = camion.enviosActuales[0]
-						posicion = 0
+		if len(camion.enviosActuales) > 0 {
+
+			for i := 0; i < 3; i++ {
+				for j := 0; j < 2; j++ {
+					if len(camion.enviosActuales) == 2 {
+						if camion.enviosActuales[0].valor >= camion.enviosActuales[1].valor && camion.enviosActuales[j].fechaEntrega == "0" {
+							paqueteAEntregar = camion.enviosActuales[0]
+							posicion = 0
+						} else {
+							paqueteAEntregar = camion.enviosActuales[1]
+							posicion = 1
+						}
+
+					} else if len(camion.enviosActuales) == 1 {
+						if camion.enviosActuales[0].fechaEntrega == "0" {
+							paqueteAEntregar = camion.enviosActuales[0]
+							posicion = 0
+						}
+
 					} else {
-						paqueteAEntregar = camion.enviosActuales[1]
-						posicion = 1
+						break
 					}
 
-				} else if len(camion.enviosActuales) == 1 {
-					if camion.enviosActuales[0].fechaEntrega == "0" {
-						paqueteAEntregar = camion.enviosActuales[0]
-						posicion = 0
+					//Intentar entrega
+					time.Sleep(time.Duration(tiempoEntrega) * time.Second)
+					var intentoEntrega = EntregarPaquete()
+
+					if intentoEntrega == "entregado" {
+						log.Printf("Paquete de camión %s %d, con id seguimiento: %d entregado", camion.tipo, numeroRet, paqueteAEntregar.seguimiento)
+						sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
+						registrarEntregaDePaquete(paqueteAEntregar.idpaquete, camion)
+						newMessage := logistica.InformeCamion{
+							IdPaquete: paqueteAEntregar.idpaquete,
+							Estado:    "Recibido",
+							Intentos:  paqueteAEntregar.intentos + 1,
+						}
+						_, err := c.InformarEntrega(context.Background(), &newMessage)
+						if err != nil {
+							log.Printf("Error al momento de avisar a logistica\n(%s)", err)
+						}
+						camion.enviosActuales = remove(camion.enviosActuales, posicion)
+
+					} else {
+
+						sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
+						log.Printf("Paquete de camión %s %d, con id seguimiento: %d NO entregado (intento numero %d)", camion.tipo, numeroRet, paqueteAEntregar.seguimiento, paqueteAEntregar.intentos)
+
 					}
-
-				} else {
-					break
-				}
-
-				//Intentar entrega
-				time.Sleep(time.Duration(tiempoEntrega) * time.Second)
-				var intentoEntrega = EntregarPaquete()
-
-				if intentoEntrega == "entregado" {
-					log.Printf("Paquete de camión %s %d, con id seguimiento: %d entregado", camion.tipo, numeroRet, paqueteAEntregar.seguimiento)
-					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
-					registrarEntregaDePaquete(paqueteAEntregar.idpaquete, camion)
-					newMessage := logistica.InformeCamion{
-						IdPaquete: paqueteAEntregar.idpaquete,
-						Estado:    "Recibido",
-						Intentos:  paqueteAEntregar.intentos + 1,
-					}
-					_, err := c.InformarEntrega(context.Background(), &newMessage)
-					if err != nil {
-						log.Printf("Error al momento de avisar a logistica\n(%s)", err)
-					}
-					camion.enviosActuales = remove(camion.enviosActuales, posicion)
-
-				} else {
-
-					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
-					log.Printf("Paquete de camión %s %d, con id seguimiento: %d NO entregado (intento numero %d)", camion.tipo, numeroRet, paqueteAEntregar.seguimiento, paqueteAEntregar.intentos)
-
 				}
 			}
 		}
