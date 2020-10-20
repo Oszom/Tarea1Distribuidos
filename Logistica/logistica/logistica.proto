@@ -1,6 +1,6 @@
 syntax = "proto3";
 package logistica;
-option go_package = "Tarea1/Logistica/logistica";
+option go_package = "Logistica/logistica";
 
 //*****************Comunicacion-Logistica-Cliente*****************
 

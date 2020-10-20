@@ -5,23 +5,23 @@ arreglarPath:
 #················································Logistica·························································
 .PHONY: runLogistica
 runLogistica: 
-	protoc -I Logistica/logistica/ Logistica/logistica/logistica.proto --go_out=plugins=grpc:Logistica/logistica/
+	protoc -I Logistica/logistica/ Logistica/logistica/logistica.proto --go_out=plugins=grpc:./
 	go run Logistica/server.go
 
 .PHONY: compileLogistica
 compileLogistica:
-	protoc -I Logistica/logistica/ Logistica/logistica/logistica.proto --go_out=plugins=grpc:Logistica/logistica/
-#protoc -I Logistica\logistica\ Logistica\logistica\logistica.proto --go_out=plugins=grpc:Logistica\logistica\
+	protoc -I Logistica/logistica/ Logistica/logistica/logistica.proto --go_out=plugins=grpc:./
+#protoc -I Logistica\logistica\ Logistica\logistica\logistica.proto --go_out=plugins=grpc:.\
 #··················································································································
 #················································Finanzas·························································
 .PHONY: runFinanzas
 runFinanzas: 
-	protoc -I Finanzas/finanza/ Finanzas/finanza/finanza.proto --go_out=plugins=grpc:Finanzas/finanza/
+	protoc -I Finanzas/finanza/ Finanzas/finanza/finanza.proto --go_out=plugins=grpc:./
 	go run Finanzas/server.go
 
 .PHONY: compileFinanzas
 compileFinanzas:
-	protoc -I Finanzas/finanza/ Finanzas/finanza/finanza.proto --go_out=plugins=grpc:Finanzas/finanza/
+	protoc -I Finanzas/finanza/ Finanzas/finanza/finanza.proto --go_out=plugins=grpc:./
 #protoc -I Logistica\logistica\ Logistica\logistica\logistica.proto --go_out=plugins=grpc:Logistica\logistica\
 #··················································································································
 #················································Cliente···························································

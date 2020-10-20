@@ -1,11 +1,12 @@
 package logistica
 
 import (
+	"Tarea1/Finanzas/finanza"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"log"
 	"sync"
 	"time"
-	"log"
-	"golang.org/x/net/context"
-	"Tarea1/Finanzas/finanza"
 )
 
 //RegistroLogistica is
@@ -19,7 +20,7 @@ type RegistroLogistica struct {
 	fechaEntrega string
 	seguimiento  int64
 	estado       string
-	intentos int64
+	intentos     int64
 	timestamp    string
 }
 
@@ -31,7 +32,7 @@ type ServerLogistica struct {
 	ColaNormales     []*RegistroLogistica
 	currSeguimiento  int64
 	muxCamiones      sync.Mutex
-	ipFinanzas string
+	ipFinanzas       string
 }
 
 //newRegistro is
@@ -67,16 +68,16 @@ func (s *ServerLogistica) NuevaOrden(ctx context.Context, orden *OrdenCliente) (
 	nuevaOrden := newRegistro(orden.Id, tipoEnvio, orden.Producto, orden.Valor, orden.Tienda, orden.Destino, s.currSeguimiento)
 	s.currSeguimiento++
 	s.ListaEnvios = append(s.ListaEnvios, nuevaOrden)
-	
-	if tipoEnvio == "retail"{
-		s.ColaRetail = append(s.ColaRetail,nuevaOrden)
-	} else if tipoEnvio == "prioritario"{
-		s.ColaPrioritarios = append(s.ColaPrioritarios,nuevaOrden)
-	} else if tipoEnvio == "normal"{
-		s.ColaNormales = append(s.ColaNormales,nuevaOrden)
+
+	if tipoEnvio == "retail" {
+		s.ColaRetail = append(s.ColaRetail, nuevaOrden)
+	} else if tipoEnvio == "prioritario" {
+		s.ColaPrioritarios = append(s.ColaPrioritarios, nuevaOrden)
+	} else if tipoEnvio == "normal" {
+		s.ColaNormales = append(s.ColaNormales, nuevaOrden)
 	}
 
-	log.Printf("Llego una nueva orden con ID %s",nuevaOrden.idpaquete)
+	log.Printf("Llego una nueva orden con ID %s", nuevaOrden.idpaquete)
 
 	return &SeguimientoCliente{
 		Seguimiento: nuevaOrden.seguimiento,
@@ -101,12 +102,12 @@ func (s *ServerLogistica) InformarSeguimiento(ctx context.Context, codSeguimient
 				Producto:    s.ListaEnvios[i].nombre,
 			}
 
-			log.Printf("Se pregunto por el seguimiento de la orden %d",resultado.Seguimiento)
+			log.Printf("Se pregunto por el seguimiento de la orden %d", resultado.Seguimiento)
 		}
 	}
 
-	if resultado.Seguimiento == -1{
-		log.Printf("Se pregunto por una orden inexistente con numero de seguimiento %d",codSeguimiento.Seguimiento)
+	if resultado.Seguimiento == -1 {
+		log.Printf("Se pregunto por una orden inexistente con numero de seguimiento %d", codSeguimiento.Seguimiento)
 	}
 
 	return resultado, nil
@@ -118,7 +119,7 @@ func (s *ServerLogistica) InformarEntrega(ctx context.Context, codSeguimiento *I
 	resultado := &InformeCamion{
 		IdPaquete: "-1",
 		Estado:    "Hola Leo",
-		Intentos: -1
+		Intentos:  -1,
 	}
 
 	for i := 0; i < len(s.ListaEnvios); i++ {
@@ -143,22 +144,22 @@ func (s *ServerLogistica) InformarEntrega(ctx context.Context, codSeguimiento *I
 			c := finanza.NewFinanzaServiceClient(conn)
 
 			mensajeEEE := &finanza.PaqueteRegistro{
-				IdPaquete: s.ListaEnvios[i].idpaquete,
-				Seguimiento: s.ListaEnvios[i].seguimiento,
-				Tipo: s.ListaEnvios[i].tipo,
-				Valor: s.ListaEnvios[i].valor,
-				Intentos: s.ListaEnvios[i].intentos,
-				Estado: s.ListaEnvios[i].estado,
-				Origen: s.ListaEnvios[i].origen,
-				Destino: s.ListaEnvios[i].destino,
-				Timestamp: s.ListaEnvios[i].timestamp,
-				Nombre: s.ListaEnvios[i].nombre,
+				IdPaquete:    s.ListaEnvios[i].idpaquete,
+				Seguimiento:  s.ListaEnvios[i].seguimiento,
+				Tipo:         s.ListaEnvios[i].tipo,
+				Valor:        s.ListaEnvios[i].valor,
+				Intentos:     s.ListaEnvios[i].intentos,
+				Estado:       s.ListaEnvios[i].estado,
+				Origen:       s.ListaEnvios[i].origen,
+				Destino:      s.ListaEnvios[i].destino,
+				Timestamp:    s.ListaEnvios[i].timestamp,
+				Nombre:       s.ListaEnvios[i].nombre,
 				FechaEntrega: s.ListaEnvios[i].fechaEntrega,
 			}
 
-			res, err := c.InformarEntrega(context.Background(),mensajeEEE)
-			if err != nil{
-				log.Printf("Error al conectarme a finanzas\n(%s)",err)
+			_, err = c.InformarEntrega(context.Background(), mensajeEEE)
+			if err != nil {
+				log.Printf("Error al conectarme a finanzas\n(%s)", err)
 			}
 		}
 	}
@@ -260,10 +261,10 @@ func (s *ServerLogistica) AsignarPaquete(ctx context.Context, presentacionCamion
 		}
 	}
 
-	if resultado.IdPaquete == ""{
-		log.Printf("El camion %s se va con la cola entre las piernas :'(",presentacionCamion.Tipo)
+	if resultado.IdPaquete == "" {
+		log.Printf("El camion %s se va con la cola entre las piernas :'(", presentacionCamion.Tipo)
 	} else {
-		log.Printf("El camion %s, se lleva la orden %s de tipo %s",presentacionCamion.Tipo,resultado.IdPaquete,resultado.Tipo)
+		log.Printf("El camion %s, se lleva la orden %s de tipo %s", presentacionCamion.Tipo, resultado.IdPaquete, resultado.Tipo)
 	}
 
 	s.muxCamiones.Unlock()

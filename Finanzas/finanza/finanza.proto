@@ -1,6 +1,6 @@
 syntax = "proto3";
 package finanza;
-option go_package = "Tarea1/Finanzas/finanza";
+option go_package = "Finanzas/finanza";
 
 message paqueteRegistro {
 	string idPaquete = 1;

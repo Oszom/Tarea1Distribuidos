@@ -44,12 +44,12 @@ func main() {
 	var wg sync.WaitGroup
 
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Printf("Ingrese nombre de la maquina: ")
+	fmt.Printf("Ingrese nombre de la maquina donde se aloja logistica: ")
 	ip, _ := reader.ReadString('\n')
 	ip = strings.TrimSuffix(ip, "\n")
 	ip = strings.TrimSuffix(ip, "\r")
 
-	fmt.Printf("Ingrese tiempo de espera machucao: ")
+	fmt.Printf("Ingrese tiempo de espera para obtener segundo paquete: ")
 	tiempoEspera, _ := reader.ReadString('\n')
 	tiempoEspera = strings.TrimSuffix(tiempoEspera, "\n")
 	tiempoEspera = strings.TrimSuffix(tiempoEspera, "\r")
@@ -57,19 +57,29 @@ func main() {
 	if errn != nil {
 		fmt.Println("Problema de conversión del tiempo\n", errn)
 	}
+
+	fmt.Printf("Ingrese tiempo de duracion de la entrega (en segundos): ")
+	tiempoEntrega, _ := reader.ReadString('\n')
+	tiempoEntrega = strings.TrimSuffix(tiempoEntrega, "\n")
+	tiempoEntrega = strings.TrimSuffix(tiempoEntrega, "\r")
+	tiempoEntregaInt, errn := strconv.ParseInt(tiempoEntrega, 10, 64)
+	if errn != nil {
+		fmt.Println("Problema de conversión del tiempo\n", errn)
+	}
+
 	wg.Add(1)
-	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt, "9100", 1)
+	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt, "9100", 1,tiempoEntregaInt)
 	wg.Add(1)
-	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt, "9101", 2)
+	go RecorridoCamiones(&wg, "retail", ip, tiempoEsperaInt, "9101", 2,tiempoEntregaInt)
 	wg.Add(1)
-	go RecorridoCamiones(&wg, "normal", ip, tiempoEsperaInt, "9102", 1)
+	go RecorridoCamiones(&wg, "normal", ip, tiempoEsperaInt, "9102", 1,tiempoEntregaInt)
 
 	wg.Wait()
 
 }
 
 //RecorridoCamiones is
-func RecorridoCamiones(wg *sync.WaitGroup, tipoCamion string, ip string, tiempo int64, puerto string, numeroRet int) {
+func RecorridoCamiones(wg *sync.WaitGroup, tipoCamion string, ip string, tiempo int64, puerto string, numeroRet int, tiempoEntrega int64) {
 	defer wg.Done()
 	camion := newCamion(tipoCamion)
 	log.Printf("Generando camión %s %d, con un tiempo de espera de %d segundos", camion.tipo, numeroRet, tiempo)
@@ -141,7 +151,9 @@ func RecorridoCamiones(wg *sync.WaitGroup, tipoCamion string, ip string, tiempo 
 				}
 
 				//Intentar entrega
+				time.Sleep(time.Duration(tiempoEntrega) * time.Second)
 				var intentoEntrega = EntregarPaquete()
+				
 				if intentoEntrega == "entregado" {
 					log.Printf("Paquete de camión %s %d, con id seguimiento: %d entregado", camion.tipo, numeroRet, paqueteAEntregar.seguimiento)
 					sumarIntentoEntrega(paqueteAEntregar.idpaquete, camion)
